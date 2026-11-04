@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="76" viewBox="0 0 320 76" role="img" aria-labelledby="title desc">
+ <title id="title">EPIYA</title><desc id="desc">几何EPIYA字标与双断口开放圆环E标记</desc>
+ <g transform="translate(6 6)"><g id="open-ring-e" transform="translate(0 0)">
+  <path id="split-orbit" d="M 53.298 17.087 A 26 26 0 0 1 17.087 53.298 M 10.702 46.913 A 26 26 0 0 1 46.913 10.702" fill="none" stroke="#10141B" stroke-width="3.6" stroke-linecap="butt"/>
+  <path id="letter-e-mark" d="M21 19H43L45 21V24H26V29.5H42V34.5H26V40H45V45H21Z" fill="#10141B"/>
+ </g></g>
+ <g id="wordmark" fill="#10141B"><path id="letter-e" d="M92 20H123L126 23V26H99V35H121V41H99V50H126V56H92Z"/>
+ <path id="letter-p" fill-rule="evenodd" d="M138 20H161L170 29V36L161 45H145V56H138ZM145 26V39H158L163 34V31L158 26Z"/>
+ <path id="letter-i" d="M182 20H189V56H182Z"/>
+ <path id="letter-y" d="M201 20H209L220 34L231 20H239L224 41V56H216V41Z"/>
+ <path id="letter-a" fill-rule="evenodd" d="M249 56L264 20H274L289 56H281L278 48H260L257 56ZM263 42H275L269 27Z"/></g>
+</svg>

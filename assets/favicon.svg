@@ -1,1 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#d7ff72"/><path d="M45 37H20c1 7 12 10 20 3l6 7C31 61 8 50 8 31 8 7 52 5 52 32v5zm-25-9h19c-1-9-17-9-19 0" fill="#111210"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>EPIYA</title><path d="M8 0H56Q64 0 64 8V56Q64 64 56 64H8Q0 64 0 56V8Q0 0 8 0Z" fill="#10141B"/><g id="open-ring-e" transform="translate(0 0)">
+  <path id="split-orbit" d="M 53.298 17.087 A 26 26 0 0 1 17.087 53.298 M 10.702 46.913 A 26 26 0 0 1 46.913 10.702" fill="none" stroke="#E8EDF2" stroke-width="3.6" stroke-linecap="butt"/>
+  <path id="letter-e-mark" d="M21 19H43L45 21V24H26V29.5H42V34.5H26V40H45V45H21Z" fill="#E8EDF2"/>
+ </g></svg>
