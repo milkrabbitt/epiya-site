@@ -1,0 +1,158 @@
+{
+  "checked_date": "2026-11-03",
+  "encoding": "WebP quality 92, method 6",
+  "assets": [
+    {
+      "output": "assets/meow-cream.webp",
+      "source": "Apple App Store 6813336672, version 2.6: cream theme screenshot",
+      "reviewed_input": "meow/cream-appstore.jpg",
+      "disclosure": "Published store screenshot",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1320,
+        2868
+      ],
+      "dimensions": [
+        660,
+        1434
+      ],
+      "source_bytes": 388322,
+      "bytes": 75344,
+      "source_sha256": "98f110bc726d7ba893da856687ce52ab16b981ed455b96aabb519437e2d7610f",
+      "sha256": "17e5bceaebd6ad02acae2d663466705aac78c13071e8348402f34d9ecb5b4b48"
+    },
+    {
+      "output": "assets/meow-strawberry.webp",
+      "source": "Apple App Store 6813336672, version 2.6: strawberry theme screenshot",
+      "reviewed_input": "meow/strawberry-appstore.jpg",
+      "disclosure": "Published store screenshot",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1320,
+        2868
+      ],
+      "dimensions": [
+        660,
+        1434
+      ],
+      "source_bytes": 366809,
+      "bytes": 69908,
+      "source_sha256": "2cc5565e16e97d46f7768264761088b78a345a5f3b449a124259d04e01d6711d",
+      "sha256": "06f0ba1664510a51abb36b75f468888cbc8a9996f27b0c01041e9ddf702a62ff"
+    },
+    {
+      "output": "assets/meow-midnight.webp",
+      "source": "Apple App Store 6813336672, version 2.6: midnight theme screenshot",
+      "reviewed_input": "meow/midnight-appstore.jpg",
+      "disclosure": "Published store screenshot",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1320,
+        2868
+      ],
+      "dimensions": [
+        660,
+        1434
+      ],
+      "source_bytes": 376129,
+      "bytes": 71736,
+      "source_sha256": "913ae2238e029b1ac3ec92a0fb5a582e74e2f15aa6657e6d02ee2b538f579db3",
+      "sha256": "48186899bcdf6ac32083d4522871ee41fd0ee34a17dbc3ab608a855278090f00"
+    },
+    {
+      "output": "assets/relic-chat.webp",
+      "source": "milkrabbitt/relic-showcase assets/ui/after-chat.png",
+      "reviewed_input": "relic/chat-build19.png",
+      "disclosure": "iOS Simulator build19, synthetic fixture; not live business",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1206,
+        2622
+      ],
+      "dimensions": [
+        660,
+        1435
+      ],
+      "source_bytes": 206964,
+      "bytes": 35062,
+      "source_sha256": "6016a066d265a609bc56213a4824f908562ff3aa9df4e91903d52bcd916e7e26",
+      "sha256": "6bd96334ca6a4faf9c2de9444822a1729598f9c4a1ae03dca8135620f9a41d03"
+    },
+    {
+      "output": "assets/relic-import.webp",
+      "source": "milkrabbitt/relic-showcase assets/ui/import-review-build20.png",
+      "reviewed_input": "relic/import-review-build20.png",
+      "disclosure": "iOS Simulator build20, synthetic fixture; not live business",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1206,
+        2622
+      ],
+      "dimensions": [
+        660,
+        1435
+      ],
+      "source_bytes": 321055,
+      "bytes": 63572,
+      "source_sha256": "89e3896142579a52981e06f881a4afda1d5f5efea8224a8c1db7a645e428f1d6",
+      "sha256": "26680ba7e5d059d5265340fdafbe093ee82b5dd8995d79cc6171f468d3862c02"
+    },
+    {
+      "output": "assets/relic-memory.webp",
+      "source": "milkrabbitt/relic-showcase assets/ui/memory-build20.png",
+      "reviewed_input": "relic/memory-build20.png",
+      "disclosure": "iOS Simulator build20, synthetic fixture; not live business",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        1206,
+        2622
+      ],
+      "dimensions": [
+        660,
+        1435
+      ],
+      "source_bytes": 275422,
+      "bytes": 47512,
+      "source_sha256": "c7e870ec1b5c54f128d226e0b0ac94ee3b202efe36aa69a551dfa2e4f42cb41b",
+      "sha256": "bae3e4625bf361241c7236e5f3fed76d0a7ff5fb0102c96fd5075dc0cca00133"
+    },
+    {
+      "output": "assets/futures-market.webp",
+      "source": "Futures Alpha workbench 06 docs/v6-screens/market.png",
+      "reviewed_input": "futures/market-v6.png",
+      "disclosure": "Actual desktop screenshot, TqSdk market dry-run; no trading account",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        2960,
+        1840
+      ],
+      "dimensions": [
+        1480,
+        920
+      ],
+      "source_bytes": 329614,
+      "bytes": 70142,
+      "source_sha256": "dc9f3135317adc7943cf9fd5f6f45e4b040b9a375b0a47645f8542724e4a8ab9",
+      "sha256": "3a5c438d539e32285813cd1f1b9c12f722c3cd236465eedaac2d9571dd151d14"
+    },
+    {
+      "output": "assets/futures-overview.webp",
+      "source": "Futures Alpha workbench 06 docs/v6-screens/overview.png",
+      "reviewed_input": "futures/overview-v6.png",
+      "disclosure": "Actual desktop screenshot, dry-run overview; not investment performance",
+      "operation": "Full-frame proportional resize and WebP encode; no crop or content edits",
+      "source_dimensions": [
+        2960,
+        1840
+      ],
+      "dimensions": [
+        1480,
+        920
+      ],
+      "source_bytes": 286779,
+      "bytes": 53290,
+      "source_sha256": "7dae6e228f69af35263145ffa99ae4ca6126fd866b537c78c645b1873503a6ad",
+      "sha256": "b00de93d49f48138ab6fef2835e595409a2d1fcee81182af56da1aa061234f40"
+    }
+  ]
+}
