@@ -39,6 +39,8 @@ required = ['index.html', 'about.html', 'products.html', 'privacy.html',
             'meow/index.html', 'meow/privacy.html', 'meow/support.html', 'style.css', 'CNAME', 'release.json']
 backend_paths = [p.strip() for p in os.environ.get('EPIYA_BACKEND_HEALTH_PATHS', '').split(',') if p.strip()]
 max_unpacked = 150 * 1024 * 1024
+legacy_index_old = '<p class="small">iPhone 与 iPad · 已在部分 App Store 地区提供 · 中国大陆正在办理备案</p>'
+legacy_index_new = '<p class="small">iPhone 与 iPad · 中国大陆等已核实 App Store 地区可获取，详情见<a href="/products/meow/">新版产品页</a></p>'
 
 
 def check(condition, message):
@@ -190,7 +192,13 @@ def validate_archive():
             if old_file.suffix == '.html':
                 old_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', old_file.read_text(), re.I)
                 new_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', (stage / relative).read_text(), re.I)
-                check(old_main and new_main and old_main.group(1) == new_main.group(1), 'Retained product page content changed: ' + str(relative))
+                check(old_main and new_main, 'Retained product page main is missing: ' + str(relative))
+                expected_main = old_main.group(1)
+                if relative.as_posix() == 'meow/index.html':
+                    # One explicitly reviewed correction; every other byte of
+                    # the retained product body must remain exactly unchanged.
+                    expected_main = expected_main.replace(legacy_index_old, legacy_index_new, 1)
+                check(expected_main == new_main.group(1), 'Retained product page content changed: ' + str(relative))
             else:
                 check(sha(old_file) == sha(stage / relative), 'Retained legacy asset changed: ' + str(relative))
     check((stage / 'CNAME').read_text().strip() == domain, 'CNAME changed')
