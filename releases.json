@@ -1,5 +1,76 @@
 [
- {"id":"meow","name":"喵喵键盘","platform":"iOS / iPadOS","status":"published","statusLabel":"正式分发 · App Store","description":"从你的 Apple 账户所在地区获取。当前抽查六个地区均可查询正式商品，不代表全球所有地区均可用。","meta":{"版本":"2.6","系统":"iOS / iPadOS 16.0+","大小":"103.6 MB（Apple 标示）","发布日期":"中国大陆 2026-10-27；其他抽查地区 2026-10-09","提供者":"祯妮 金","会员":"国区年度会员 ¥6.00，以购买确认页为准"},"links":[{"url":"https://apps.apple.com/cn/app/id6813336672","label":"中国大陆"},{"url":"https://apps.apple.com/us/app/id6813336672","label":"美国"},{"url":"https://apps.apple.com/hk/app/id6813336672","label":"中国香港"},{"url":"https://apps.apple.com/tw/app/id6813336672","label":"中国台湾"},{"url":"https://apps.apple.com/jp/app/id6813336672","label":"日本"},{"url":"https://apps.apple.com/gb/app/id6813336672","label":"英国"}],"note":"2026-11-03 核验 Apple 官方商品记录。App Store 自动管理安装签名与更新，不提供旁加载安装包。"},
- {"id":"relic","name":"Relic","platform":"iOS / WECHAT","status":"development","statusLabel":"内部测试中","description":"iOS 内部 TestFlight、小程序开发测试分别推进，尚无已核实的公开下载入口。","meta":{"iOS":"内部测试 · 无公开邀请","微信小程序":"开发测试 · 无正式公开码","微信机器人":"生产连接暂未开放","官网购买":"暂未开放购买"},"links":[],"note":"不将上传构建、内部测试或小程序开发版描述为公开上线。"},
- {"id":"futures","name":"Futures Alpha","platform":"macOS / APPLE SILICON","status":"development","statusLabel":"工作台06 · 开发中","description":"期货研究桌面软件，正在进行 Apple Silicon 内部验证。公开分发前需完成版本化、签名与公证。","meta":{"当前平台":"macOS Apple Silicon 内部开发","公开安装包":"尚未提供","Intel / Windows":"暂无已核实版本","发行版本 / 大小 / 校验":"正式发布时提供"},"links":[],"note":"当前仅有开发构建，不将历史测试包作为正式下载。"}
+  {
+    "id": "meow",
+    "name": "喵喵键盘",
+    "platform": "iOS / iPadOS",
+    "status": "published",
+    "statusLabel": "正式分发 · App Store",
+    "description": "从你的 Apple 账户所在地区获取。当前抽查六个地区均可查询正式商品，不代表全球所有地区均可用。",
+    "meta": {
+      "版本": "2.6",
+      "系统": "iOS / iPadOS 16.0+",
+      "大小": "103.6 MB（Apple 标示）",
+      "发布日期": "中国大陆 2026-10-27；其他抽查地区 2026-10-09",
+      "会员": "国区年度会员 ¥6.00，以购买确认页为准"
+    },
+    "links": [
+      {
+        "url": "https://apps.apple.com/cn/app/id6813336672",
+        "label": "中国大陆"
+      },
+      {
+        "url": "https://apps.apple.com/us/app/id6813336672",
+        "label": "美国"
+      },
+      {
+        "url": "https://apps.apple.com/hk/app/id6813336672",
+        "label": "中国香港"
+      },
+      {
+        "url": "https://apps.apple.com/tw/app/id6813336672",
+        "label": "中国台湾"
+      },
+      {
+        "url": "https://apps.apple.com/jp/app/id6813336672",
+        "label": "日本"
+      },
+      {
+        "url": "https://apps.apple.com/gb/app/id6813336672",
+        "label": "英国"
+      }
+    ],
+    "note": "2026-11-03 核验 Apple 官方商品记录。App Store 自动管理安装签名与更新，不提供旁加载安装包。"
+  },
+  {
+    "id": "relic",
+    "name": "Relic",
+    "platform": "iOS / WECHAT",
+    "status": "development",
+    "statusLabel": "内部测试中",
+    "description": "iOS 内部 TestFlight、小程序开发测试分别推进，尚无已核实的公开下载入口。",
+    "meta": {
+      "iOS": "内部测试 · 无公开邀请",
+      "微信小程序": "开发测试 · 无正式公开码",
+      "微信机器人": "生产连接暂未开放",
+      "官网购买": "暂未开放购买"
+    },
+    "links": [],
+    "note": "不将上传构建、内部测试或小程序开发版描述为公开上线。"
+  },
+  {
+    "id": "futures",
+    "name": "Futures Alpha",
+    "platform": "macOS / APPLE SILICON",
+    "status": "development",
+    "statusLabel": "工作台06 · 开发中",
+    "description": "期货研究桌面软件，正在进行 Apple Silicon 内部验证。公开分发前需完成版本化、签名与公证。",
+    "meta": {
+      "当前平台": "macOS Apple Silicon 内部开发",
+      "公开安装包": "尚未提供",
+      "Intel / Windows": "暂无已核实版本",
+      "发行版本 / 大小 / 校验": "正式发布时提供"
+    },
+    "links": [],
+    "note": "当前仅有开发构建，不将历史测试包作为正式下载。"
+  }
 ]
