@@ -39,6 +39,12 @@
  }));
  all('img').forEach(img => img.addEventListener('error', () => {
   if (img.classList.contains('sculpture-fallback')) return;
+  if (img === $('#theme-preview')) {
+   img.removeAttribute('aria-busy');
+   img.alt='主题图片暂未加载，请选择任一主题重试';
+   toast('主题图片暂未加载，请选择任一主题重试。');
+   return;
+  }
   const text=document.createElement('span'); text.className='image-error'; text.textContent='图片暂未加载 · '+img.alt;
   img.replaceWith(text);
  },{once:true}));
