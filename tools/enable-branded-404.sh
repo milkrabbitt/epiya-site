@@ -21,8 +21,16 @@ def check(value, message):
         raise RuntimeError(message)
 
 
+def is_within(path, parent):
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+
 def command(args):
-    result = subprocess.run(args, capture_output=True)
+    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     check(result.returncode == 0, 'Command failed: ' + args[0] + ' (exit ' + str(result.returncode) + ')')
     return result.stdout
 
@@ -70,12 +78,12 @@ check(before_home[0] == 200, 'Current HTTPS homepage is not healthy')
 
 if sys.argv[1] == '--rollback':
     backup = Path(sys.argv[2]).resolve()
-    check(backup.is_relative_to(BASE / 'nginx-404-backups'), 'Unexpected rollback directory')
+    check(is_within(backup, BASE / 'nginx-404-backups'), 'Unexpected rollback directory')
     receipt_path = backup / 'receipt.json'
-    receipt = json.loads(receipt_path.read_text())
+    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
     check(receipt['phase'] == 'healthy', 'Only a healthy 404 change can be manually rolled back')
     config = Path(receipt['configuration']).resolve(strict=True)
-    check(config.is_relative_to(Path('/etc/nginx')), 'Unexpected configuration target')
+    check(is_within(config, Path('/etc/nginx')), 'Unexpected configuration target')
     current = config.read_bytes()
     check(digest(current) == receipt['newSha256'], 'Configuration changed since this operation; refusing to overwrite it')
     original = (backup / 'original.conf').read_bytes()
@@ -92,13 +100,13 @@ if sys.argv[1] == '--rollback':
         raise
     receipt['phase'] = 'manually-rolled-back'
     receipt['rolledBackAt'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'result': 'rolled-back', 'receipt': str(receipt_path), 'apiIncludeModified': False}))
     sys.exit(0)
 
 config = Path(sys.argv[1]).resolve(strict=True)
 release_id = sys.argv[2]
-check(config.is_relative_to(Path('/etc/nginx')) and config.is_file(), 'Pass the actual existing /etc/nginx configuration file')
+check(is_within(config, Path('/etc/nginx')) and config.is_file(), 'Pass the actual existing /etc/nginx configuration file')
 check(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,70}', release_id) is not None, 'Invalid release ID')
 original = config.read_bytes()
 text = original.decode('utf-8')
@@ -125,7 +133,7 @@ receipt_path = backup / 'receipt.json'
 receipt = {'phase': 'prepared', 'configuration': str(config), 'oldSha256': digest(original), 'newSha256': digest(updated),
            'apiIncludeSha256': include_before, 'metadata': metadata, 'backup': str(backup / 'original.conf'),
            'startedAt': datetime.datetime.now(datetime.timezone.utc).isoformat()}
-receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 os.chmod(receipt_path, 0o600)
 written = False
 try:
@@ -153,6 +161,6 @@ except BaseException as failure:
     raise
 finally:
     receipt['finishedAt'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print(json.dumps({'result': 'enabled', 'receipt': str(receipt_path), 'apiIncludeModified': False, 'change': 'One server-level error_page 404 /404.html directive'}))
 PY

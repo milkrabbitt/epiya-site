@@ -16,7 +16,7 @@ lock = (base / '.website-deploy.lock').open('a')
 fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 backup = base / 'website-releases' / release_id
 receipt_path = backup / 'deployment.json'
-receipt = json.loads(receipt_path.read_text())
+receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
 if receipt.get('phase') != 'healthy' or receipt.get('liveRoot') != str(live):
     raise SystemExit('Receipt is not a healthy deployment for this document root; inspect it before proceeding')
 if not live.is_symlink() or live.resolve() != Path(receipt['newRoot']).resolve():
@@ -45,7 +45,7 @@ def set_link(target):
 def current_hash():
     result = subprocess.run(['curl', '--fail', '--silent', '--show-error', '--noproxy', '*', '--max-time', '20',
                              '--resolve', 'epiya.cn:443:127.0.0.1', '-H', 'Accept-Encoding: identity',
-                             'https://epiya.cn/index.html'], capture_output=True)
+                             'https://epiya.cn/index.html'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode:
         raise RuntimeError('Rollback HTTPS probe failed')
     return hashlib.sha256(result.stdout).hexdigest()
@@ -76,7 +76,7 @@ except BaseException:
 receipt['phase'] = 'manually-rolled-back'
 receipt['rolledBackAt'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 temp = receipt_path.with_suffix('.tmp')
-temp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+temp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 os.chmod(temp, 0o600)
 os.replace(temp, receipt_path)
 print(json.dumps({'result': 'rolled-back', 'url': 'https://epiya.cn', 'receipt': str(receipt_path), 'nginxModified': False}))

@@ -2,21 +2,19 @@
 """Build a byte-identical static EPIYA archive from a pinned source tree.
 
 Only public paths are selected. release.json is generated inside the archive;
-the source tree is never modified. Gzip uses canonical stored DEFLATE blocks,
-making its bytes independent of the host OS, filesystem metadata, Python gzip
-header defaults, and zlib version. Already compressed image assets dominate
-this site, so avoiding an additional compression dependency is inexpensive.
+the source tree is never modified. USTAR headers and gzip stored DEFLATE blocks
+are written as fixed bytes, without tarfile/gzip writer defaults. Source
+filesystem metadata and zlib compression are not inputs. The server must still
+compare the resulting archive SHA256 with the locally verified expected hash.
 """
 import argparse
 import binascii
 import hashlib
-import io
 import json
 import os
 from pathlib import Path
 import re
 import struct
-import tarfile
 import tempfile
 
 DATE = '2026-11-03'
@@ -72,19 +70,67 @@ def selected_files(source):
     for name in ['index.html', 'CNAME', 'releases.json', 'meow/privacy.html', 'meow/support.html']:
         if name not in selected:
             raise ValueError('Required public file missing: ' + name)
-    if selected['CNAME'].read_text().strip() != 'epiya.cn':
+    if selected['CNAME'].read_text(encoding='utf-8').strip() != 'epiya.cn':
         raise ValueError('CNAME must retain epiya.cn')
     return selected
 
 
-def info(name, size=0, directory=False):
-    member = tarfile.TarInfo(name + '/' if directory else name)
-    member.uid = member.gid = member.mtime = 0
-    member.uname = member.gname = ''
-    member.mode = 0o755 if directory else 0o644
-    member.type = tarfile.DIRTYPE if directory else tarfile.REGTYPE
-    member.size = 0 if directory else size
-    return member
+def octal(value, width):
+    encoded = format(value, 'o').encode('ascii')
+    if value < 0 or len(encoded) >= width:
+        raise ValueError('USTAR numeric field exceeds its fixed width')
+    return b'0' * (width - 1 - len(encoded)) + encoded + b'\0'
+
+
+def ustar_header(name, size=0, directory=False):
+    name = name + '/' if directory else name
+    encoded = name.encode('utf-8')
+    if b'\0' in encoded or name.startswith('/') or '..' in name.split('/'):
+        raise ValueError('Unsafe USTAR entry name')
+    prefix = b''
+    if len(encoded) > 100:
+        # Choose the final split that fits both fixed USTAR name fields.
+        split = None
+        for position in range(len(encoded) - 1, 0, -1):
+            if encoded[position:position + 1] == b'/' and position <= 155 and 0 < len(encoded) - position - 1 <= 100:
+                split = position
+                break
+        if split is None:
+            raise ValueError('Public path does not fit fixed USTAR fields: ' + name)
+        prefix, encoded = encoded[:split], encoded[split + 1:]
+    header = bytearray(512)
+    header[0:len(encoded)] = encoded
+    header[100:108] = octal(0o755 if directory else 0o644, 8)
+    header[108:116] = octal(0, 8)  # uid
+    header[116:124] = octal(0, 8)  # gid
+    header[124:136] = octal(0 if directory else size, 12)
+    header[136:148] = octal(0, 12)  # mtime
+    header[148:156] = b'        '  # checksum field is spaces while summing
+    header[156:157] = b'5' if directory else b'0'
+    header[257:263] = b'ustar\0'
+    header[263:265] = b'00'
+    # linkname, uname and gname remain NUL-filled.
+    header[329:337] = octal(0, 8)  # devmajor
+    header[337:345] = octal(0, 8)  # devminor
+    header[345:345 + len(prefix)] = prefix
+    checksum = format(sum(header), '06o').encode('ascii')
+    if len(checksum) != 6:
+        raise ValueError('Unexpected USTAR checksum width')
+    header[148:156] = checksum + b'\0 '
+    return bytes(header)
+
+
+def write_tar(entries, directories, destination):
+    for name in sorted(set(entries) | directories):
+        if name in directories:
+            destination.write(ustar_header(name, directory=True))
+        else:
+            data = entries[name]
+            destination.write(ustar_header(name, len(data)))
+            destination.write(data)
+            destination.write(b'\0' * ((-len(data)) % 512))
+    destination.write(b'\0' * 1024)  # two end-of-archive records
+    destination.write(b'\0' * ((-destination.tell()) % 10240))
 
 
 def write_gzip(tar_stream, destination):
@@ -144,12 +190,7 @@ def package(source, commit, output):
     temporary_name = None
     try:
         with tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024) as tar_stream:
-            with tarfile.open(fileobj=tar_stream, mode='w', format=tarfile.USTAR_FORMAT) as archive:
-                for name in sorted(set(entries) | directories):
-                    if name in directories:
-                        archive.addfile(info(name, directory=True))
-                    else:
-                        archive.addfile(info(name, len(entries[name])), io.BytesIO(entries[name]))
+            write_tar(entries, directories, tar_stream)
             tar_stream.seek(0)
             with tempfile.NamedTemporaryFile(prefix='.' + output.name + '.', dir=output.parent, delete=False) as destination:
                 temporary_name = destination.name
@@ -161,7 +202,8 @@ def package(source, commit, output):
         temporary_name = None
     finally:
         if temporary_name is not None:
-            Path(temporary_name).unlink(missing_ok=True)
+            if os.path.exists(temporary_name):
+                os.unlink(temporary_name)
     digest = hashlib.sha256()
     with output.open('rb') as archive:
         for block in iter(lambda: archive.read(1024 * 1024), b''):
@@ -178,7 +220,7 @@ def main():
     args = parser.parse_args()
     try:
         result = package(args.source, args.commit, args.output)
-    except (ValueError, OSError, tarfile.TarError) as error:
+    except (ValueError, OSError) as error:
         parser.exit(1, 'Packaging failed: ' + str(error) + '\n')
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 

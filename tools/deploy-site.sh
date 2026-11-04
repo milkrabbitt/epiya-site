@@ -48,6 +48,28 @@ def check(condition, message):
         raise RuntimeError(message)
 
 
+def is_within(path, parent):
+    # Compatible with the existing ECS Python 3.6 runtime.
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+
+def merge_tree(source, destination):
+    # copytree(dirs_exist_ok=...) is unavailable before Python 3.8.
+    destination.mkdir(parents=True, exist_ok=True)
+    for child in source.iterdir():
+        target = destination / child.name
+        check(not child.is_symlink(), 'Certificate challenge symlink requires review')
+        if child.is_dir():
+            merge_tree(child, target)
+        else:
+            shutil.copy2(str(child), str(target))
+    shutil.copystat(str(source), str(destination))
+
+
 def sha(path):
     h = hashlib.sha256()
     with path.open('rb') as stream:
@@ -57,7 +79,7 @@ def sha(path):
 
 
 def command(args):
-    result = subprocess.run(args, capture_output=True)
+    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode:
         # No request URLs contain credentials; do not print raw Nginx config.
         raise RuntimeError('Command failed: ' + args[0] + ' (exit ' + str(result.returncode) + ')')
@@ -99,7 +121,7 @@ check(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,70}', release_id) is not None, 
 check(base.is_dir() and not base.is_symlink(), 'Unexpected /srv/epiya layout')
 check(live.is_dir(), 'Existing static document root missing; refusing to create a replacement site')
 resolved_live = live.resolve()
-check(resolved_live != base and resolved_live.is_relative_to(base), 'Existing live root resolves outside /srv/epiya')
+check(resolved_live != base and is_within(resolved_live, base), 'Existing live root resolves outside /srv/epiya')
 check(sha(archive) == expected_sha, 'Uploaded archive SHA256 mismatch')
 for binary in ['curl', 'nginx', 'tar']:
     check(shutil.which(binary) is not None, binary + ' is required')
@@ -132,7 +154,7 @@ old_index_sha = sha(resolved_live / 'index.html')
 
 def save_receipt():
     temp = receipt_path.with_suffix('.tmp')
-    temp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+    temp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     os.chmod(temp, 0o600)
     os.replace(temp, receipt_path)
 
@@ -165,7 +187,7 @@ def validate_archive():
             if str(relative) in ('', '.'):
                 continue
             target = stage.joinpath(*relative.parts)
-            check(target.resolve().is_relative_to(stage), 'Archive escaped staging directory')
+            check(is_within(target.resolve(), stage), 'Archive escaped staging directory')
             if member.isdir():
                 target.mkdir(parents=True, exist_ok=True, mode=0o755)
                 os.chmod(target, 0o755)
@@ -177,7 +199,7 @@ def validate_archive():
             os.chmod(target, 0o644)
     for path in required:
         check((stage / path).is_file(), 'Required retained public path missing: ' + path)
-    provenance = json.loads((stage / 'release.json').read_text())
+    provenance = json.loads((stage / 'release.json').read_text(encoding='utf-8'))
     source_commit = provenance.get('sourceCommit', '')
     check(re.fullmatch(r'[a-fA-F0-9]{40}', source_commit) is not None, 'release.json needs the complete sourceCommit SHA')
     check(release_id == 'epiya-20261103-' + source_commit[:12].lower(), 'Release ID does not match release.json sourceCommit')
@@ -190,8 +212,8 @@ def validate_archive():
             check(not old_file.is_symlink(), 'Retained legacy file is a symlink')
             check((stage / relative).is_file(), 'Retained legacy file missing: ' + str(relative))
             if old_file.suffix == '.html':
-                old_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', old_file.read_text(), re.I)
-                new_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', (stage / relative).read_text(), re.I)
+                old_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', old_file.read_text(encoding='utf-8'), re.I)
+                new_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', (stage / relative).read_text(encoding='utf-8'), re.I)
                 check(old_main and new_main, 'Retained product page main is missing: ' + str(relative))
                 expected_main = old_main.group(1)
                 if relative.as_posix() == 'meow/index.html':
@@ -201,8 +223,8 @@ def validate_archive():
                 check(expected_main == new_main.group(1), 'Retained product page content changed: ' + str(relative))
             else:
                 check(sha(old_file) == sha(stage / relative), 'Retained legacy asset changed: ' + str(relative))
-    check((stage / 'CNAME').read_text().strip() == domain, 'CNAME changed')
-    homepage = (stage / 'index.html').read_text()
+    check((stage / 'CNAME').read_text(encoding='utf-8').strip() == domain, 'CNAME changed')
+    homepage = (stage / 'index.html').read_text(encoding='utf-8')
     for filing in ['浙ICP备2026086186号-1', '浙公网安备33011302001543号']:
         check(filing in homepage, 'Verified website filing is absent from homepage')
     # ACME challenge files, if hosted in this static root, belong to the
@@ -211,7 +233,7 @@ def validate_archive():
     if existing_well_known.exists():
         check(existing_well_known.is_dir() and not existing_well_known.is_symlink(), 'Unexpected .well-known layout')
         check(not any(p.is_symlink() for p in existing_well_known.rglob('*')), '.well-known symlink requires manual review')
-        shutil.copytree(existing_well_known, stage / '.well-known', dirs_exist_ok=True)
+        merge_tree(existing_well_known, stage / '.well-known')
     receipt['unpackedBytes'] = sum(p.stat().st_size for p in stage.rglob('*') if p.is_file())
 
 
