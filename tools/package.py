@@ -17,11 +17,11 @@ import re
 import struct
 import tempfile
 
-DATE = '2026-11-03'
+DATE = '2026-11-04'
 ROOT_FILES = {
     '.nojekyll', '404.html', 'CNAME', 'about.html', 'changelog.html', 'index.html',
     'legacy.css', 'privacy.html', 'products.html', 'releases.json', 'robots.txt',
-    'sitemap.xml', 'style.css', 'terms.html',
+    'sitemap.xml', 'style.css', 'terms.html', 'services.html',
 }
 PUBLIC_DIRECTORIES = {'assets', 'meow', 'products', 'downloads', 'relic', 'account', 'contact', 'support'}
 STATIC_SUFFIXES = {

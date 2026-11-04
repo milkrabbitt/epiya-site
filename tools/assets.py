@@ -29,10 +29,12 @@ SPECS = (
      "milkrabbitt/relic-showcase assets/ui/import-review-build20.png", "iOS Simulator build20, synthetic fixture; not live business"),
     ("relic/memory-build20.png", "relic-memory.webp", 660,
      "milkrabbitt/relic-showcase assets/ui/memory-build20.png", "iOS Simulator build20, synthetic fixture; not live business"),
+    ("relic/persona-build20.png", "relic-persona.webp", 660,
+     "milkrabbitt/relic-showcase assets/ui/persona-build20.png", "iOS Simulator build20, synthetic fixture; not live business; generated persona and expression style"),
     ("futures/market-v6.png", "futures-market.webp", 1480,
      "Futures Alpha workbench 06 docs/v6-screens/market.png", "Actual desktop screenshot, TqSdk market dry-run; no trading account"),
-    ("futures/overview-v6.png", "futures-overview.webp", 1480,
-     "Futures Alpha workbench 06 docs/v6-screens/overview.png", "Actual desktop screenshot, dry-run overview; not investment performance"),
+    ("futures/market-v6.png", "futures-overview.webp", 1480,
+     "Futures Alpha workbench 06 docs/v6-screens/market.png", "Actual desktop screenshot, TqSdk market dry-run; no trading account"),
 )
 
 
@@ -85,7 +87,7 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, default=SITE_ROOT / "assets")
     args = parser.parse_args()
     results = build(args.source_root, args.output_root)
-    manifest = {"checked_date": "2026-11-03", "encoding": "WebP quality 92, method 6", "assets": results}
+    manifest = {"checked_date": "2026-11-04", "encoding": "WebP quality 92, method 6", "assets": results}
     (SITE_ROOT / "tools" / "sources.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     for entry in results:
         print(f"{entry['output']}: {entry['dimensions'][0]}x{entry['dimensions'][1]}, {entry['bytes']} bytes")

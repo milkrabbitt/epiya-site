@@ -1,326 +1,305 @@
 #!/usr/bin/env bash
-# Prepared release script. Creates no infrastructure or Nginx configuration.
-# Run on the existing ECS after static/browser QA and root verification:
-#   bash deploy-site.sh /tmp/epiya-site-20261103.tar.gz ARCHIVE_SHA256 RELEASE_ID
-# RELEASE_ID is epiya-20261103-<source-commit-prefix>, derived by the release owner
-# from release.json; archive SHA256 is separately computed after packaging.
-# Optional read-only backend probes, set explicitly from confirmed live routes:
-#   EPIYA_BACKEND_HEALTH_PATHS='/v1/health,/v1/public/config' bash ...
+# Existing ECS only; no Nginx, backend, DNS or certificate changes.
+# Usage: bash deploy-site.sh ABS_ARCHIVE SHA256 RELEASE_ID EXPECTED_OLD_COMMIT
+# RELEASE_ID must be epiya-YYYYMMDD-<12-char source commit>, from release.json.
+# Fetch this script from the same pinned Git commit as tools/package.py. The
+# archive hash must equal the independently packaged and reviewed local hash.
 set -euo pipefail
-
-if [[ $# -ne 3 ]]; then
-  echo 'Usage: deploy-site.sh ABSOLUTE_ARCHIVE EXPECTED_SHA256 RELEASE_ID' >&2
-  exit 2
-fi
+[[ $# -eq 4 ]] || { echo 'Usage: deploy-site.sh ABS_ARCHIVE SHA256 RELEASE_ID EXPECTED_OLD_COMMIT' >&2; exit 2; }
 command -v python3 >/dev/null
 exec python3 - "$@" <<'PY'
-import ctypes
-import datetime
-import fcntl
-import hashlib
-import json
-import os
+import datetime, fcntl, hashlib, json, os, re, shutil, subprocess, sys, tarfile
 from pathlib import Path, PurePosixPath
-import re
-import shutil
-import subprocess
-import sys
-import tarfile
-import tempfile
-import urllib.parse
+from urllib.parse import quote
 
-archive = Path(sys.argv[1])
-expected_sha = sys.argv[2].lower()
-release_id = sys.argv[3]
-base = Path('/srv/epiya')
-live = base / 'site-20261009'
-domain = 'epiya.cn'
-required = ['index.html', 'about.html', 'products.html', 'privacy.html',
-            'meow/index.html', 'meow/privacy.html', 'meow/support.html', 'style.css', 'CNAME', 'release.json']
-backend_paths = [p.strip() for p in os.environ.get('EPIYA_BACKEND_HEALTH_PATHS', '').split(',') if p.strip()]
-max_unpacked = 150 * 1024 * 1024
-legacy_index_old = '<p class="small">iPhone 与 iPad · 已在部分 App Store 地区提供 · 中国大陆正在办理备案</p>'
-legacy_index_new = '<p class="small">iPhone 与 iPad · 中国大陆等已核实 App Store 地区可获取，详情见<a href="/products/meow/">新版产品页</a></p>'
+BASE = Path('/srv/epiya')
+DOMAIN = 'epiya.cn'
+LIMIT = 150 * 1024 * 1024
+BACKEND = ('/healthz', '/privacy', '/support', '/upload', '/policy.css', '/upload.css', '/upload.js')
+REQUIRED = ('index.html', '404.html', 'about.html', 'products.html', 'privacy.html', 'terms.html',
+            'meow/index.html', 'meow/privacy.html', 'meow/support.html', 'style.css', 'CNAME', 'release.json')
+SUFFIXES = {'.html', '.css', '.js', '.mjs', '.json', '.svg', '.png', '.webp', '.jpg', '.jpeg',
+            '.gif', '.ico', '.avif', '.webm', '.mp4', '.woff', '.woff2', '.ttf', '.otf', '.txt',
+            '.xml', '.webmanifest', '.pdf'}
+TEXT = {'.html', '.css', '.js', '.mjs', '.json', '.svg', '.txt', '.xml', '.webmanifest'}
+SECRETS = (re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+           re.compile(rb'\b(?:sk-[A-Za-z0-9_-]{24,}|gh[pousr]_[A-Za-z0-9]{25,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[A-Z0-9]{16})\b'))
 
 
-def check(condition, message):
-    if not condition:
+def check(value, message):
+    if not value:
         raise RuntimeError(message)
 
 
-def is_within(path, parent):
-    # Compatible with the existing ECS Python 3.6 runtime.
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def within(path, root):
     try:
-        path.relative_to(parent)
+        path.relative_to(root)
         return True
     except ValueError:
         return False
 
 
-def merge_tree(source, destination):
-    # copytree(dirs_exist_ok=...) is unavailable before Python 3.8.
-    destination.mkdir(parents=True, exist_ok=True)
-    for child in source.iterdir():
-        target = destination / child.name
-        check(not child.is_symlink(), 'Certificate challenge symlink requires review')
-        if child.is_dir():
-            merge_tree(child, target)
+def safe_name(name):
+    path = PurePosixPath(name)
+    check(not path.is_absolute() and '..' not in path.parts and '\\' not in name, 'Unsafe archive path')
+    check(not any(p.startswith('.') and p not in ('.nojekyll', '.well-known') for p in path.parts), 'Hidden source path')
+    check(not any(p in ('tools', 'Backend', 'Tests', 'node_modules', '__pycache__') for p in path.parts), 'Non-public source path')
+    return path.as_posix()
+
+
+def inventory(root):
+    check(root.is_dir() and not root.is_symlink(), 'Unexpected static root')
+    files = {}
+    for path in sorted(root.rglob('*')):
+        check(not path.is_symlink(), 'Nested static symlink requires review')
+        name = safe_name(path.relative_to(root).as_posix())
+        if path.is_file():
+            check(name in ('CNAME', '.nojekyll') or name.startswith('.well-known/') or path.suffix.lower() in SUFFIXES, 'Non-static public file: ' + name)
+            data = path.read_bytes()
+            files[name] = {'sha256': sha(data), 'size': len(data)}
         else:
-            shutil.copy2(str(child), str(target))
-    shutil.copystat(str(source), str(destination))
+            check(path.is_dir(), 'Special file in static tree')
+    return files
 
 
-def sha(path):
-    h = hashlib.sha256()
-    with path.open('rb') as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b''):
-            h.update(block)
-    return h.hexdigest()
+def validate_manifest(root, files):
+    doc = json.loads((root / 'release.json').read_text(encoding='utf-8'))
+    check(re.fullmatch('[a-f0-9]{40}', doc.get('sourceCommit', '')) is not None, 'Invalid sourceCommit')
+    date = datetime.datetime.strptime(doc.get('date', ''), '%Y-%m-%d').strftime('%Y-%m-%d')
+    check(date == doc['date'], 'Invalid canonical release date')
+    rows = doc.get('files')
+    check(isinstance(rows, list) and rows, 'Empty manifest')
+    listed = {}
+    for row in rows:
+        name = safe_name(row['path'])
+        check(name == row['path'] and name not in listed and name != 'release.json', 'Invalid or duplicate manifest path')
+        listed[name] = {'sha256': row['sha256'], 'size': row['size']}
+    actual = {k: v for k, v in files.items() if k != 'release.json' and not k.startswith('.well-known/')}
+    check(listed == actual, 'Manifest does not match complete public file set')
+    return doc
 
 
-def command(args):
-    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode:
-        # No request URLs contain credentials; do not print raw Nginx config.
-        raise RuntimeError('Command failed: ' + args[0] + ' (exit ' + str(result.returncode) + ')')
-    return result.stdout
+def run(args):
+    proc = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    check(proc.returncode == 0, 'Command failed: ' + args[0])
+    return proc.stdout
 
 
-def nginx_digest():
-    return hashlib.sha256(command(['nginx', '-T'])).hexdigest()
+def get(path):
+    check(path.startswith('/') and not path.startswith('//') and not any(c in path for c in ('?', '#', '\n', '\r')), 'Invalid read-only probe path')
+    raw = run(['curl', '--silent', '--show-error', '--noproxy', '*', '--request', 'GET',
+               '--max-time', '20', '--connect-timeout', '5', '--proto', '=https', '--tlsv1.2',
+               '--resolve', DOMAIN + ':443:127.0.0.1', '-H', 'Accept-Encoding: identity',
+               '-H', 'Cache-Control: no-cache', '-w', '\n%{http_code}',
+               'https://' + DOMAIN + quote(path, safe='/.-_')])
+    body, status = raw.rsplit(b'\n', 1)
+    return int(status), body
 
 
-def exchange(first, second):
-    libc = ctypes.CDLL(None, use_errno=True)
-    operation = getattr(libc, 'renameat2', None)
-    check(operation is not None, 'libc renameat2 unavailable; atomic deployment stopped')
-    operation.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-    operation.restype = ctypes.c_int
-    if operation(-100, os.fsencode(first), -100, os.fsencode(second), 2) != 0:
-        error = ctypes.get_errno()
-        raise OSError(error, os.strerror(error))
+def require(probe, path, checksum, statuses=(200,)):
+    status, data = probe(path)
+    check(status in statuses and sha(data) == checksum, 'HTTPS content/status mismatch: ' + path)
+    return {'path': path, 'status': status, 'sha256': checksum}
 
 
-def get(path, allow_error=False):
-    check(path.startswith('/') and not path.startswith('//') and not any(c in path for c in ['?', '#', '\n', '\r']), 'Invalid health path')
-    args = ['curl', '--silent', '--show-error', '--noproxy', '*', '--max-time', '20',
-            '--connect-timeout', '5', '--proto', '=https', '--resolve', domain + ':443:127.0.0.1',
-            '-H', 'Accept-Encoding: identity', '-w', '\n%{http_code}', 'https://' + domain + urllib.parse.quote(path, safe='/.-_')]
-    raw = command(args)
-    body, code = raw.rsplit(b'\n', 1)
-    status = int(code)
-    check(allow_error or status == 200, 'HTTPS health failed for ' + path + ': ' + str(status))
-    return status, body
+def nginx_state():
+    run(['nginx', '-t'])
+    return sha(run(['nginx', '-T']))
 
 
-check(os.geteuid() == 0, 'Run on existing ECS as root; no local deployment is supported')
-check(sys.platform == 'linux', 'This script is for the existing Linux ECS only')
-check(archive.is_absolute() and archive.is_file() and not archive.is_symlink(), 'Archive must be an uploaded regular file at an absolute path')
-check(re.fullmatch(r'[a-f0-9]{64}', expected_sha) is not None, 'Expected SHA256 is required')
-check(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,70}', release_id) is not None, 'Invalid release ID')
-check(base.is_dir() and not base.is_symlink(), 'Unexpected /srv/epiya layout')
-check(live.is_dir(), 'Existing static document root missing; refusing to create a replacement site')
-resolved_live = live.resolve()
-check(resolved_live != base and is_within(resolved_live, base), 'Existing live root resolves outside /srv/epiya')
-check(sha(archive) == expected_sha, 'Uploaded archive SHA256 mismatch')
-for binary in ['curl', 'nginx', 'tar']:
-    check(shutil.which(binary) is not None, binary + ' is required')
-for path in backend_paths:
-    check(path.startswith('/v1/') or path in ['/health', '/healthz'], 'Backend health probes must be explicit known read-only health/config paths')
-
-lock = (base / '.website-deploy.lock').open('a')
-fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-backup = base / 'website-releases' / release_id
-releases = base / 'releases'
-check(not releases.is_symlink(), 'Releases directory cannot be a symlink')
-releases.mkdir(exist_ok=True, mode=0o755)
-stage = releases / release_id
-check(not backup.exists() and not stage.exists(), 'Release ID already exists; inspect the previous receipt before retrying')
-backup.mkdir(parents=True, mode=0o700)
-stage.mkdir(mode=0o755)
-receipt_path = backup / 'deployment.json'
-receipt = {
-    'releaseId': release_id, 'startedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-    'archiveSha256': expected_sha, 'domain': domain, 'liveRoot': str(live),
-    'phase': 'preparing', 'nginxModified': False, 'backendHealthPaths': backend_paths,
-    'oldRootKind': 'symlink' if live.is_symlink() else 'directory',
-}
-switched = False
-previous = None
-old_symlink = os.readlink(live) if live.is_symlink() else None
-nginx_before = None
-old_index_sha = sha(resolved_live / 'index.html')
+def write_json(path, value):
+    temporary = path.with_suffix('.tmp')
+    with temporary.open('w', encoding='utf-8') as stream:
+        json.dump(value, stream, ensure_ascii=False, indent=2)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.chmod(str(temporary), 0o600)
+    os.replace(str(temporary), str(path))
 
 
-def save_receipt():
-    temp = receipt_path.with_suffix('.tmp')
-    temp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    os.chmod(temp, 0o600)
-    os.replace(temp, receipt_path)
+def set_link(base, live, target, release_id):
+    temporary = base / ('.website-swap-' + release_id)
+    check(not temporary.exists() and not temporary.is_symlink(), 'Temporary symlink already exists')
+    os.symlink(str(target), str(temporary))
+    os.replace(str(temporary), str(live))
+    fd = os.open(str(base), os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
-def validate_archive():
-    with tarfile.open(archive, 'r:*') as source:
+def extract(archive, stage):
+    with tarfile.open(str(archive), 'r:gz') as source:
         members = source.getmembers()
-        size = 0
-        seen = set()
+        check(len(members) <= 20000, 'Too many archive entries')
+        seen, total = set(), 0
         for member in members:
-            path = PurePosixPath(member.name)
-            check(not path.is_absolute() and '..' not in path.parts and '\\' not in member.name, 'Unsafe archive member path')
-            check(member.isfile() or member.isdir(), 'Archive links/devices/special files are prohibited')
-            if str(path) in ('', '.'):
-                check(member.isdir(), 'Invalid root member')
+            name = safe_name(member.name)
+            check(member.isfile() or member.isdir(), 'Links/devices/special archive members prohibited')
+            if name in ('', '.'):
+                check(member.isdir(), 'Invalid archive root')
                 continue
-            check(str(path) not in seen, 'Duplicate archive member')
-            seen.add(str(path))
-            check(not any(p in ['.git', '.aws', '.ssh', '__MACOSX'] or p.startswith('.env') for p in path.parts), 'Private repository/runtime member in archive')
-            check(not any(p.startswith('.') and p not in ['.well-known', '.nojekyll'] for p in path.parts), 'Hidden source/runtime files must not be published')
-            check('tools' not in path.parts, 'Build tools must not be included in the public archive')
-            check(path.suffix.lower() not in ['.pem', '.key', '.p12', '.db', '.sqlite', '.mobileprovision'], 'Private/server artifact in archive')
-            size += member.size
-            check(member.size >= 0 and size <= max_unpacked, 'Archive exceeds static release size limit')
-        check(shutil.disk_usage(base).free > size * 3 + 100 * 1024 * 1024, 'Insufficient free space for safe release and backup')
-        # Manual extraction deliberately refuses links and path traversal. It
-        # does not depend on Python's version-specific tar extraction filter.
+            check(name not in seen, 'Duplicate normalized archive path')
+            seen.add(name)
+            check(not name.startswith('.well-known/'), 'Certificate workflow is preserved from current server, not archive')
+            if member.isfile():
+                check(name in ('CNAME', '.nojekyll') or PurePosixPath(name).suffix.lower() in SUFFIXES, 'Non-static archive file')
+                check('/' + name not in BACKEND and not name.startswith(('v1/', 'v2/')), 'Archive shadows protected backend')
+                total += member.size
+                check(0 <= member.size <= LIMIT and total <= LIMIT, 'Static release exceeds size limit')
         for member in members:
-            relative = PurePosixPath(member.name)
-            if str(relative) in ('', '.'):
+            name = safe_name(member.name)
+            if name in ('', '.'):
                 continue
-            target = stage.joinpath(*relative.parts)
-            check(is_within(target.resolve(), stage), 'Archive escaped staging directory')
+            target = stage / name
+            check(within(target.resolve(), stage.resolve()), 'Archive escaped staging root')
             if member.isdir():
-                target.mkdir(parents=True, exist_ok=True, mode=0o755)
-                os.chmod(target, 0o755)
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-            with source.extractfile(member) as incoming, target.open('xb') as outgoing:
-                shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
-            check(target.stat().st_size == member.size, 'Truncated archive member')
-            os.chmod(target, 0o644)
-    for path in required:
-        check((stage / path).is_file(), 'Required retained public path missing: ' + path)
-    provenance = json.loads((stage / 'release.json').read_text(encoding='utf-8'))
-    source_commit = provenance.get('sourceCommit', '')
-    check(re.fullmatch(r'[a-fA-F0-9]{40}', source_commit) is not None, 'release.json needs the complete sourceCommit SHA')
-    check(release_id == 'epiya-20261103-' + source_commit[:12].lower(), 'Release ID does not match release.json sourceCommit')
-    receipt['sourceCommit'] = source_commit.lower()
-    # Preserve policy/help content and existing product assets. Head metadata
-    # may be enriched for SEO; the legacy stylesheet itself remains unchanged.
-    for old_file in list((resolved_live / 'meow').rglob('*')) + [resolved_live / 'style.css']:
-        if old_file.is_file():
-            relative = old_file.relative_to(resolved_live)
-            check(not old_file.is_symlink(), 'Retained legacy file is a symlink')
-            check((stage / relative).is_file(), 'Retained legacy file missing: ' + str(relative))
-            if old_file.suffix == '.html':
-                old_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', old_file.read_text(encoding='utf-8'), re.I)
-                new_main = re.search(r'<main\b[^>]*>([\s\S]*?)</main>', (stage / relative).read_text(encoding='utf-8'), re.I)
-                check(old_main and new_main, 'Retained product page main is missing: ' + str(relative))
-                expected_main = old_main.group(1)
-                if relative.as_posix() == 'meow/index.html':
-                    # One explicitly reviewed correction; every other byte of
-                    # the retained product body must remain exactly unchanged.
-                    expected_main = expected_main.replace(legacy_index_old, legacy_index_new, 1)
-                check(expected_main == new_main.group(1), 'Retained product page content changed: ' + str(relative))
+                target.mkdir(parents=True, exist_ok=True)
+                os.chmod(str(target), 0o755)
             else:
-                check(sha(old_file) == sha(stage / relative), 'Retained legacy asset changed: ' + str(relative))
-    check((stage / 'CNAME').read_text(encoding='utf-8').strip() == domain, 'CNAME changed')
-    homepage = (stage / 'index.html').read_text(encoding='utf-8')
-    for filing in ['浙ICP备2026086186号-1', '浙公网安备33011302001543号']:
-        check(filing in homepage, 'Verified website filing is absent from homepage')
-    # ACME challenge files, if hosted in this static root, belong to the
-    # existing certificate workflow. Preserve them without changing Nginx.
-    existing_well_known = resolved_live / '.well-known'
-    if existing_well_known.exists():
-        check(existing_well_known.is_dir() and not existing_well_known.is_symlink(), 'Unexpected .well-known layout')
-        check(not any(p.is_symlink() for p in existing_well_known.rglob('*')), '.well-known symlink requires manual review')
-        merge_tree(existing_well_known, stage / '.well-known')
-    receipt['unpackedBytes'] = sum(p.stat().st_size for p in stage.rglob('*') if p.is_file())
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with source.extractfile(member) as incoming, target.open('xb') as outgoing:
+                    shutil.copyfileobj(incoming, outgoing, 1024 * 1024)
+                check(target.stat().st_size == member.size, 'Truncated archive member')
+                os.chmod(str(target), 0o644)
+        for path in stage.rglob('*'):
+            if path.is_dir():
+                os.chmod(str(path), 0o755)
 
 
-def restore():
-    if old_symlink is not None:
-        replacement = base / ('.website-restore-' + release_id)
-        check(not replacement.exists() and not replacement.is_symlink(), 'Rollback temporary path occupied')
-        os.symlink(old_symlink, replacement)
-        os.replace(replacement, live)
-    else:
-        exchange(live, previous)
-    check(hashlib.sha256(get('/index.html')[1]).hexdigest() == old_index_sha, 'Rollback content verification failed')
-    check(nginx_digest() == nginx_before, 'Nginx config changed independently during rollback')
+def deploy(archive, expected_sha, release_id, expected_old, base=BASE, probe=get, config=nginx_state):
+    check(re.fullmatch('[a-f0-9]{64}', expected_sha) is not None, 'Invalid archive SHA256')
+    check(re.fullmatch('[a-f0-9]{40}', expected_old) is not None, 'Expected current sourceCommit is required')
+    check(re.fullmatch('epiya-[0-9]{8}-[a-f0-9]{12}', release_id) is not None, 'Invalid release ID')
+    check(archive.is_absolute() and archive.is_file() and not archive.is_symlink(), 'Archive must be an absolute regular file')
+    check(archive.stat().st_size <= LIMIT and sha(archive.read_bytes()) == expected_sha, 'Uploaded archive SHA256/size mismatch')
+    check(base.is_dir() and not base.is_symlink(), 'Unexpected ECS static base')
+    live, releases, backups = base / 'site-20261009', base / 'releases', base / 'website-releases'
+    check(live.is_symlink(), 'Expected existing static root symlink; inspect changed deployment topology')
+    check(all(p.is_dir() and not p.is_symlink() for p in (releases, backups)), 'Unexpected release/backup directories')
+    old_link, old_root = os.readlink(str(live)), live.resolve()
+    check(within(old_root, releases.resolve()) and old_root != releases.resolve(), 'Current root outside release directory')
+    old_files = inventory(old_root)
+    old_manifest = validate_manifest(old_root, old_files)
+    check(old_manifest['sourceCommit'] == expected_old, 'Current sourceCommit changed; stop and review')
+    stage, backup = releases / release_id, backups / release_id
+    check(all(not p.exists() and not p.is_symlink() for p in (stage, backup)), 'Release ID already used; inspect receipt before retrying')
+    needed = sum(v['size'] for v in old_files.values()) + LIMIT + 100 * 1024 * 1024
+    check(shutil.disk_usage(str(base)).free > needed, 'Insufficient free disk for release and backup')
+    old_index = old_files['index.html']['sha256']
+    require(probe, '/', old_index)
+    nginx_before = config()
+    baseline = {}
+    for path in BACKEND:
+        status, body = probe(path)
+        check(status == 200, 'Backend baseline failed: ' + path)
+        if path == '/healthz':
+            health = json.loads(body.decode('utf-8'))
+            check(health.get('ok') is True and health.get('service') == 'relic', 'Relic baseline unhealthy')
+        baseline[path] = {'status': status, 'sha256': sha(body)}
+    backup.mkdir(mode=0o700)
+    os.chmod(str(backup), 0o700)
+    record = backup / 'deployment.json'
+    receipt = {'releaseId': release_id, 'phase': 'preparing', 'archiveSha256': expected_sha,
+               'previousCommit': expected_old, 'oldSymlink': old_link, 'oldRoot': str(old_root),
+               'oldIndexSha256': old_index, 'newRoot': str(stage), 'liveRoot': str(live),
+               'nginxModified': False, 'backendModified': False, 'nginxConfigurationSha256': nginx_before,
+               'backendBefore': baseline, 'startedAtUTC': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    write_json(record, receipt)
+    try:
+        stage.mkdir(mode=0o755)
+        extract(archive, stage)
+        new_files = inventory(stage)
+        manifest = validate_manifest(stage, new_files)
+        expected_id = 'epiya-' + manifest['date'].replace('-', '') + '-' + manifest['sourceCommit'][:12]
+        check(release_id == expected_id, 'Release ID does not match canonical manifest date and commit')
+        check(manifest['sourceCommit'] != expected_old, 'Refusing same-commit replacement')
+        check(all(name in new_files for name in REQUIRED), 'Required website/policy paths missing')
+        old_html = {name for name in old_files if name.endswith('.html')}
+        check(old_html.issubset(new_files), 'Existing public HTML paths must be retained')
+        check((stage / 'CNAME').read_bytes() == (old_root / 'CNAME').read_bytes() and (stage / 'CNAME').read_text().strip() == DOMAIN, 'CNAME changed')
+        homepage = (stage / 'index.html').read_text(encoding='utf-8')
+        for value in ('杭州壹湃科技有限公司', '浙ICP备2026086186号-1', '浙公网安备33011302001543号'):
+            check(value in homepage, 'Company or filing absent from homepage')
+        for name in new_files:
+            if Path(name).suffix.lower() in TEXT:
+                check(not any(pattern.search((stage / name).read_bytes()) for pattern in SECRETS), 'Potential secret in public text: ' + name)
+        # Challenge files stay byte-identical without changing the certificate workflow.
+        if (old_root / '.well-known').exists():
+            check(not (stage / '.well-known').exists(), 'Archive unexpectedly supplies certificate directory')
+            shutil.copytree(str(old_root / '.well-known'), str(stage / '.well-known'))
+        new_files = inventory(stage)
+        shutil.copytree(str(old_root), str(backup / 'previous-root'))
+        check(inventory(backup / 'previous-root') == old_files, 'Backup failed full hash verification')
+        write_json(backup / 'old-link.json', {'sourceCommit': expected_old, 'oldSymlink': old_link, 'files': old_files})
+        check(live.is_symlink() and os.readlink(str(live)) == old_link and inventory(old_root) == old_files, 'Current release changed during preparation')
+        require(probe, '/', old_index)
+        check(config() == nginx_before, 'Nginx configuration changed during preparation')
+        receipt.update({'phase': 'prepared', 'sourceCommit': manifest['sourceCommit'],
+                        'privateBackup': str(backup / 'previous-root'), 'manifestSha256': new_files['release.json']['sha256']})
+        write_json(record, receipt)
+        set_link(base, live, stage, release_id)
+        receipt['phase'] = 'switched'
+        write_json(record, receipt)
+        verified = []
+        for name, item in sorted(new_files.items()):
+            if name == '.nojekyll' or name.startswith('.well-known/'):
+                continue
+            verified.append(require(probe, '/' + name, item['sha256'], (200, 404) if name == '404.html' else (200,)))
+            if name == 'index.html' or name.endswith('/index.html'):
+                alias = '/' if name == 'index.html' else '/' + name[:-len('index.html')]
+                verified.append(require(probe, alias, item['sha256']))
+        require(probe, '/__static_missing_' + manifest['sourceCommit'][:12] + '/', new_files['404.html']['sha256'], (404,))
+        for path, item in baseline.items():
+            require(probe, path, item['sha256'])
+        check(config() == nginx_before, 'Nginx configuration changed during deployment')
+        check(live.is_symlink() and live.resolve() == stage.resolve(), 'Another release replaced this deployment')
+        receipt.update({'phase': 'healthy', 'verified': verified, 'backendAfter': baseline,
+                        'finishedAtUTC': datetime.datetime.now(datetime.timezone.utc).isoformat()})
+        write_json(record, receipt)
+        return {'result': 'deployed', 'releaseId': release_id, 'sourceCommit': manifest['sourceCommit'],
+                'verifiedCount': len(verified), 'url': 'https://' + DOMAIN, 'receipt': str(record),
+                'nginxModified': False, 'backendModified': False}
+    except BaseException as failure:
+        receipt.update({'phase': 'failed-before-switch', 'error': str(failure)})
+        if live.is_symlink() and live.resolve() == stage.resolve():
+            try:
+                set_link(base, live, old_link, release_id)
+                require(probe, '/', old_index)
+                for path, item in baseline.items():
+                    require(probe, path, item['sha256'])
+                check(config() == nginx_before, 'Nginx configuration changed independently')
+                receipt['phase'] = 'rolled-back'
+            except BaseException as rollback_failure:
+                receipt.update({'phase': 'rollback-needs-attention', 'rollbackError': str(rollback_failure)})
+        elif not live.is_symlink() or os.readlink(str(live)) != old_link:
+            receipt['phase'] = 'concurrent-change-needs-attention'
+        receipt['finishedAtUTC'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        write_json(record, receipt)
+        raise RuntimeError(receipt['phase'] + ': ' + str(failure) + '; receipt=' + str(record))
 
 
-try:
-    validate_archive()
-    command(['nginx', '-t'])
-    nginx_before = nginx_digest()
-    receipt['nginxConfigurationSha256'] = nginx_before
-    baseline = {p: get(p, allow_error=True)[0] for p in backend_paths}
-    receipt['backendBeforeStatus'] = baseline
-    # Verify current document-root assumptions before any mutation.
-    check(hashlib.sha256(get('/index.html')[1]).hexdigest() == old_index_sha, 'HTTPS currently serves another root; refusing deployment')
-    if old_symlink is None:
-        with tempfile.TemporaryDirectory(prefix='.website-atomic-probe-', dir=base) as probe:
-            first, second = Path(probe) / 'a', Path(probe) / 'b'
-            target = Path(probe) / 'target'
-            first.mkdir(); target.mkdir()
-            (first / 'a').write_text('a'); (target / 'b').write_text('b')
-            os.symlink(target, second)
-            exchange(first, second)
-            check(first.is_symlink() and (first / 'b').is_file() and (second / 'a').is_file(), 'Atomic directory/symlink exchange probe failed')
-    backup_tar = backup / 'original-site.tar.gz'
-    command(['tar', '--numeric-owner', '-czf', str(backup_tar), '-C', str(resolved_live), '.'])
-    command(['tar', '-tzf', str(backup_tar)])
-    receipt['backupArchive'] = str(backup_tar)
-    receipt['backupSha256'] = sha(backup_tar)
-    receipt['oldIndexSha256'] = old_index_sha
-    receipt['oldSymlink'] = old_symlink
-    expected_pages = {str(p.relative_to(stage)): sha(p) for p in stage.rglob('*.html')}
-    receipt['phase'] = 'prepared'
-    save_receipt()
-    replacement = base / ('.website-link-' + release_id)
-    check(not replacement.exists() and not replacement.is_symlink(), 'Temporary symlink path occupied')
-    os.symlink(stage, replacement)
-    if old_symlink is not None:
-        os.replace(replacement, live)
-        switched = True
-    else:
-        exchange(live, replacement)
-        switched = True
-        previous = replacement
-        previous_destination = backup / 'previous-root'
-        os.replace(previous, previous_destination)
-        previous = previous_destination
-        receipt['previousRoot'] = str(previous)
-    receipt['newRoot'] = str(stage)
-    receipt['phase'] = 'switched'
-    save_receipt()
-    verified = []
-    for path, checksum in sorted(expected_pages.items()):
-        body = get('/' + path)[1]
-        check(hashlib.sha256(body).hexdigest() == checksum, 'Deployed content differs from release: ' + path)
-        verified.append('/' + path)
-    check(hashlib.sha256(get('/')[1]).hexdigest() == expected_pages['index.html'], 'Homepage root does not serve release index')
-    after = {p: get(p, allow_error=True)[0] for p in backend_paths}
-    check(after == baseline, 'Backend health HTTP status changed')
-    check(nginx_digest() == nginx_before, 'Nginx configuration changed independently; refusing successful receipt')
-    receipt.update({'phase': 'healthy', 'verifiedHtmlPaths': verified, 'backendAfterStatus': after,
-                    'finishedAt': datetime.datetime.now(datetime.timezone.utc).isoformat()})
-    save_receipt()
-    print(json.dumps({'result': 'deployed', 'url': 'https://' + domain, 'releaseId': release_id,
-                      'verifiedHtmlCount': len(verified), 'receipt': str(receipt_path),
-                      'backup': str(backup_tar), 'nginxModified': False}))
-except BaseException as failure:
-    receipt['error'] = str(failure)
-    receipt['phase'] = 'failed-before-switch'
-    if switched:
-        try:
-            restore()
-            receipt['phase'] = 'rolled-back'
-        except BaseException as rollback_failure:
-            receipt['phase'] = 'rollback-needs-attention'
-            receipt['rollbackError'] = str(rollback_failure)
-    receipt['finishedAt'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    save_receipt()
-    print(json.dumps({'result': receipt['phase'], 'error': str(failure), 'receipt': str(receipt_path)}), file=sys.stderr)
-    sys.exit(1)
+def main():
+    check(len(sys.argv) == 5, 'Expected four deployment arguments')
+    check(sys.platform == 'linux' and os.geteuid() == 0, 'Existing Linux ECS root only')
+    check(shutil.which('curl') and shutil.which('nginx'), 'curl and nginx are required')
+    check(BASE.is_dir() and not BASE.is_symlink(), 'Existing static base required')
+    with (BASE / '.website-deploy.lock').open('a') as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = deploy(Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4])
+        print(json.dumps(result, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        print(json.dumps({'result': 'failed', 'error': str(error)}, ensure_ascii=False), file=sys.stderr)
+        sys.exit(1)
 PY
