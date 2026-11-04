@@ -7,7 +7,7 @@
 set -euo pipefail
 if [[ $# -ne 2 ]]; then echo 'Usage: enable-branded-404.sh CONFIG RELEASE_ID | --rollback BACKUP_DIRECTORY' >&2; exit 2; fi
 exec python3 - "$@" <<'PY'
-import datetime, fcntl, hashlib, json, os, re, stat, subprocess, sys, tempfile
+import datetime, fcntl, hashlib, json, os, re, stat, subprocess, sys, tempfile, time
 from pathlib import Path
 
 BASE = Path('/srv/epiya')
@@ -39,12 +39,30 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def get(path):
-    raw = command(['curl', '--silent', '--show-error', '--noproxy', '*', '--max-time', '20', '--connect-timeout', '5',
+def get(path, timeout='20'):
+    raw = command(['curl', '--silent', '--show-error', '--noproxy', '*', '--max-time', timeout, '--connect-timeout', '5',
                    '--resolve', 'epiya.cn:443:127.0.0.1', '-H', 'Accept-Encoding: identity',
                    '-w', '\n%{http_code}\n%{content_type}', 'https://epiya.cn' + path])
     body, status, content_type = raw.rsplit(b'\n', 2)
     return int(status), content_type.decode().split(';')[0], body
+
+
+def verify_branded_404(expected_sha, record):
+    # Nginx reload returns before every old worker has finished. Probe actual
+    # responses instead of assuming that the first new connection is current.
+    for attempt in range(1, 11):
+        observation = {'attempt': attempt, 'status': None, 'contentType': None, 'sha256': None}
+        try:
+            status, content_type, body = get('/__epiya_missing_page_20261103__', timeout='2')
+            observation.update({'status': status, 'contentType': content_type, 'sha256': digest(body)})
+        except Exception as failure:
+            observation['error'] = str(failure)
+        record(observation)
+        if observation['status'] == 404 and observation['contentType'] == 'text/html' and observation['sha256'] == expected_sha:
+            return
+        if attempt < 10:
+            time.sleep(0.25)
+    raise RuntimeError('Branded 404 did not match HTTP404, text/html and exact page SHA256 after 10 bounded probes')
 
 
 def replace_config(path, data, metadata):
@@ -140,8 +158,12 @@ try:
     replace_config(config, updated, metadata)
     written = True
     reload_nginx()
-    status, content_type, body = get('/__epiya_missing_page_20261103__')
-    check(status == 404 and content_type == 'text/html' and digest(body) == branded_sha, 'Branded 404 response did not preserve HTTP404 and exact page content')
+    receipt['expected404Sha256'] = branded_sha
+    receipt['404Checks'] = []
+    def record_404_check(observation):
+        receipt['404Checks'].append(observation)
+        receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    verify_branded_404(branded_sha, record_404_check)
     check(get('/') == before_home, 'Homepage changed during 404 configuration')
     check({p: get(p)[:2] for p in PROBES} == before_api, 'Existing API status/content type changed')
     check(digest(INCLUDE.read_bytes()) == include_before, 'Relic include changed independently')
