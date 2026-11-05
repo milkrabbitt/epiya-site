@@ -1,0 +1,27 @@
+ROUND 4 — VISUAL REVIEW ONLY
+
+Refined the existing cyberpunk product gallery and unified the full static site.
+Added OPC working-method content and a quiet invitation to investment discussion.
+No financing amount, valuation or transaction flow is published.
+Payment, account, distribution and backend capabilities are unchanged.
+
+This branch is a local review candidate. No push or production deployment has
+been performed. Generated pages currently contain noindex,nofollow and robots
+blocks crawling intentionally for preview.
+
+Build for preview:
+  EPIYA_PREVIEW=1 python3 tools/build.py
+
+Only AFTER the owner approves this visual preview, prepare production artifacts:
+  EPIYA_PREVIEW=0 python3 tools/build.py
+Then confirm robots/canonical paths, preserve existing server routing, back up
+the deployed files, and deploy through the original repository/ECS process.
+Do not deploy preview robots.txt or a static /support override for the separate
+Relic backend /support endpoint. /support/ is the company site's support center.
+
+Revert baseline: 6739fd6 (local source baseline, not a production release ID).
+This round changes no original main-branch checkout, DNS, CNAME or HTTPS setup.
+
+Public contact uses 42, the existing official enterprise WeChat card and
+contact@epiya.cn. Mailbox activation was confirmed by the owner in the setup
+handoff on 2026-10-29. No mailbox backend or delivery test was performed here.

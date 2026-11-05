@@ -1,0 +1,270 @@
+{
+  "version": "2.6.1 (61)",
+  "storeVersion": "2.6",
+  "themes": [
+    {
+      "id": "cream",
+      "name": "奶油橘猫",
+      "release": "current-store",
+      "palette": {
+        "background": "#F6EADB",
+        "key": "#FFFDF7",
+        "text": "#4E3327",
+        "secondary": "#795E4C",
+        "accent": "#E7A061",
+        "actionText": "#422B21",
+        "pressed": "#F4CCA5",
+        "line": "#DFC7AB"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/cream.svg",
+      "photo": {
+        "src": "/assets/meow-cream.webp",
+        "width": 660,
+        "height": 1434,
+        "caption": "奶油橘猫 · App Store 2.6 真实产品截图",
+        "crop": false
+      }
+    },
+    {
+      "id": "strawberry",
+      "name": "草莓奶猫",
+      "release": "current-store",
+      "palette": {
+        "background": "#F7EBED",
+        "key": "#FFFDFA",
+        "text": "#592D40",
+        "secondary": "#825B69",
+        "accent": "#D78399",
+        "actionText": "#391C29",
+        "pressed": "#F3CBDA",
+        "line": "#E4C8D1"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/strawberry.svg",
+      "photo": {
+        "src": "/assets/meow-strawberry.webp",
+        "width": 660,
+        "height": 1434,
+        "caption": "草莓奶猫 · App Store 2.6 真实产品截图",
+        "crop": false
+      }
+    },
+    {
+      "id": "midnight",
+      "name": "午夜黑猫",
+      "release": "current-store",
+      "palette": {
+        "background": "#202A3D",
+        "key": "#35425B",
+        "text": "#F3F0E6",
+        "secondary": "#C4CAD8",
+        "accent": "#C2B7EF",
+        "actionText": "#242035",
+        "pressed": "#596784",
+        "line": "#54637D"
+      },
+      "dark": true,
+      "cat": "/assets/meow-cats/midnight.svg",
+      "photo": {
+        "src": "/assets/meow-midnight.webp",
+        "width": 660,
+        "height": 1434,
+        "caption": "午夜黑猫 · App Store 2.6 真实产品截图",
+        "crop": false
+      }
+    },
+    {
+      "id": "calico",
+      "name": "三花日记",
+      "release": "development-preview",
+      "palette": {
+        "background": "#F5EDE5",
+        "key": "#FFFBF5",
+        "text": "#382B26",
+        "secondary": "#68554C",
+        "accent": "#E8AE8C",
+        "actionText": "#36261E",
+        "pressed": "#EBD1BF",
+        "line": "#E2CBB9"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/calico.svg",
+      "photo": {
+        "src": "/assets/meow-calico-build61.jpg",
+        "width": 906,
+        "height": 1930,
+        "caption": "三花日记 · 开发版 build61 实际截图 · 已裁去模拟器外框",
+        "crop": true
+      }
+    },
+    {
+      "id": "orangeTabby",
+      "name": "橘猫午后",
+      "release": "development-preview",
+      "palette": {
+        "background": "#F7EBD8",
+        "key": "#FFFBF1",
+        "text": "#422D1A",
+        "secondary": "#6B5644",
+        "accent": "#F0B76C",
+        "actionText": "#392611",
+        "pressed": "#ECD2A9",
+        "line": "#E1C7A2"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/orangeTabby.svg",
+      "photo": null
+    },
+    {
+      "id": "goldenShaded",
+      "name": "金渐层",
+      "release": "development-preview",
+      "palette": {
+        "background": "#F0EFE0",
+        "key": "#FFFDF1",
+        "text": "#333124",
+        "secondary": "#5C5949",
+        "accent": "#D3BF76",
+        "actionText": "#2C2818",
+        "pressed": "#E9DFB5",
+        "line": "#D8CEAA"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/goldenShaded.svg",
+      "photo": {
+        "src": "/assets/meow-goldenShaded-build61.jpg",
+        "width": 906,
+        "height": 1930,
+        "caption": "金渐层 · 开发版 build61 实际截图 · 已裁去模拟器外框",
+        "crop": true
+      }
+    },
+    {
+      "id": "ragdoll",
+      "name": "布偶云朵",
+      "release": "development-preview",
+      "palette": {
+        "background": "#E9EFF7",
+        "key": "#FBFDFF",
+        "text": "#28354D",
+        "secondary": "#52617A",
+        "accent": "#B0C7E8",
+        "actionText": "#243451",
+        "pressed": "#D4E0F2",
+        "line": "#C6D5E8"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/ragdoll.svg",
+      "photo": {
+        "src": "/assets/meow-ragdoll-build61.jpg",
+        "width": 906,
+        "height": 1930,
+        "caption": "布偶云朵 · 开发版 build61 实际截图 · 已裁去模拟器外框",
+        "crop": true
+      }
+    },
+    {
+      "id": "maineCoon",
+      "name": "缅因松林",
+      "release": "development-preview",
+      "palette": {
+        "background": "#E8EEE9",
+        "key": "#FBFEFC",
+        "text": "#263C33",
+        "secondary": "#49665A",
+        "accent": "#ABCBB5",
+        "actionText": "#223A2C",
+        "pressed": "#D0E2D5",
+        "line": "#C1D6C8"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/maineCoon.svg",
+      "photo": {
+        "src": "/assets/meow-maineCoon-build61.jpg",
+        "width": 906,
+        "height": 1930,
+        "caption": "缅因松林 · 开发版 build61 实际截图 · 已裁去模拟器外框",
+        "crop": true
+      }
+    },
+    {
+      "id": "devonRex",
+      "name": "德文卷卷",
+      "release": "development-preview",
+      "palette": {
+        "background": "#F0EAF5",
+        "key": "#FFFBFF",
+        "text": "#382D49",
+        "secondary": "#625476",
+        "accent": "#D4B8E6",
+        "actionText": "#342241",
+        "pressed": "#E7D7F1",
+        "line": "#DBCBE5"
+      },
+      "dark": false,
+      "cat": "/assets/meow-cats/devonRex.svg",
+      "photo": {
+        "src": "/assets/meow-devonRex-build61.jpg",
+        "width": 906,
+        "height": 1930,
+        "caption": "德文卷卷 · 开发版 build61 实际截图 · 已裁去模拟器外框",
+        "crop": true
+      }
+    },
+    {
+      "id": "paw",
+      "name": "粉爪",
+      "release": "current-store",
+      "palette": {
+        "background": "#FFEFF7",
+        "key": "#FFFFFF",
+        "text": "#29242A",
+        "secondary": "#746771",
+        "accent": "#FF2E6B",
+        "actionText": "#FFFFFF",
+        "pressed": "#FFD1E2",
+        "line": "#F2D6E2"
+      },
+      "dark": false,
+      "cat": null,
+      "photo": null
+    },
+    {
+      "id": "sky",
+      "name": "蓝喵",
+      "release": "current-store",
+      "palette": {
+        "background": "#EDF7FF",
+        "key": "#FFFFFF",
+        "text": "#243448",
+        "secondary": "#596F84",
+        "accent": "#2E7AF5",
+        "actionText": "#FFFFFF",
+        "pressed": "#CEE3FF",
+        "line": "#CEDDEC"
+      },
+      "dark": false,
+      "cat": null,
+      "photo": null
+    },
+    {
+      "id": "candy",
+      "name": "糖喵",
+      "release": "current-store",
+      "palette": {
+        "background": "#FAF0FF",
+        "key": "#FFFFFF",
+        "text": "#392B48",
+        "secondary": "#75617E",
+        "accent": "#9E59F5",
+        "actionText": "#FFFFFF",
+        "pressed": "#E5D2FF",
+        "line": "#E1D1ED"
+      },
+      "dark": false,
+      "cat": null,
+      "photo": null
+    }
+  ]
+}

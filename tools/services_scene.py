@@ -1,0 +1,52 @@
+"""Public services page; all diagrams are labelled illustrations, not client work."""
+
+services_body = '''
+<section class="svc-hero wrap" aria-labelledby="svc-title">
+  <p class="svc-kicker"><span>EPIYA STUDIO</span><span>SOFTWARE / AI / DELIVERY</span></p>
+  <div class="svc-heading">
+    <h1 id="svc-title">从一个想法，<br>到真正用起来。</h1>
+    <div class="svc-intro"><p>小程序、App、AI 应用与工作流。<br>我们和你一起梳理问题，把设计、开发和交付接起来。</p><a class="svc-link" href="/contact/?topic=business">聊聊你的项目 <span aria-hidden="true">↗</span></a></div>
+  </div>
+  <div class="svc-workbench" data-svc-light>
+    <div class="svc-bench-top"><span>EPIYA / BUILD STATION</span><span>服务流程示意 · 非客户案例</span></div>
+    <div class="svc-bench-grid">
+      <a class="svc-station svc-app-station" href="#svc-app"><span class="svc-station-label">01 / INTERFACE</span><div class="svc-phone-pair" aria-hidden="true"><div class="svc-wire-phone"><i></i><span class="svc-wire-title">你的产品</span><b></b><b></b><em></em><small>界面示意</small></div><div class="svc-real-phone"><img src="/assets/meow-strawberry.webp" alt="" width="660" height="1434" decoding="async"></div></div><span class="svc-station-title">小程序与 App <span aria-hidden="true">↗</span></span><span class="svc-station-note">右侧为喵喵键盘真实界面</span></a>
+      <a class="svc-station svc-flow-station" href="#svc-ai"><span class="svc-station-label">02 / INTELLIGENCE</span><div class="svc-flow-diagram" aria-hidden="true"><div class="svc-flow-input"><span>资料与任务</span><i>文档</i><i>知识库</i></div><span class="svc-wire-arrow">→</span><div class="svc-ai-core"><span>EPIYA</span><strong>AI</strong><small>任务工作流</small></div><span class="svc-wire-arrow">→</span><div class="svc-flow-output"><span>检查与确认</span><i>结果</i><i>人工复核</i></div><div class="svc-flow-track"><span>连接工具</span><span>检查结果</span><span>处理异常</span></div></div><span class="svc-station-title">AI Agent 与工作流 <span aria-hidden="true">↗</span></span><span class="svc-station-note">围绕一个具体任务，连接每一步</span></a>
+      <a class="svc-station svc-system-station" href="#svc-fde"><span class="svc-station-label">03 / INTEGRATION</span><div class="svc-system-stack" aria-hidden="true"><div><span>01</span><strong>业务场景</strong><i></i></div><div><span>02</span><strong>系统与数据</strong><i></i></div><div><span>03</span><strong>部署与评估</strong><i></i></div></div><span class="svc-station-title">FDE · AI 落地 <span aria-hidden="true">↗</span></span><span class="svc-station-note">走进实际使用流程，把系统接起来</span></a>
+    </div>
+    <div class="svc-bench-edge" aria-hidden="true"><span>DESIGN</span><i></i><span>BUILD</span><i></i><span>DELIVER</span></div>
+  </div>
+  <div class="svc-hero-footer"><p>从需求到界面，从代码到使用。</p><a href="#svc-scope">查看合作范围 <span aria-hidden="true">↓</span></a></div>
+</section>
+
+<section class="svc-scope" id="svc-scope" aria-labelledby="svc-scope-title">
+  <div class="wrap">
+    <div class="svc-section-heading"><p class="svc-kicker"><span>01</span><span>WHAT WE CAN BUILD</span></p><h2 id="svc-scope-title">围绕你的问题，<br>选择合适的做法。</h2></div>
+    <div class="svc-capabilities">
+      <article class="svc-capability svc-capability-app" id="svc-app"><div class="svc-cap-top"><span>01</span><span>INTERFACE</span></div><h3>小程序与<br>App 定制</h3><p>从使用者要完成的那件事出发，梳理操作、界面与数据之间的关系。</p><ul><li>产品范围与交互原型</li><li>客户端与必要的服务端</li><li>设备测试与发布准备</li></ul><a class="svc-link" href="/contact/?topic=business">讨论产品需求 <span aria-hidden="true">↗</span></a></article>
+      <article class="svc-capability svc-capability-ai" id="svc-ai"><div class="svc-cap-top"><span>02</span><span>INTELLIGENCE</span></div><h3>AI Agent<br>与工作流</h3><p>连接模型、知识库和现有工具，让一个具体任务有清楚的输入、步骤与结果。</p><ul><li>任务拆解与工具连接</li><li>结果评估与异常处理</li><li>权限边界与人工确认</li></ul><a class="svc-link" href="/contact/?topic=business">聊聊你的流程 <span aria-hidden="true">↗</span></a></article>
+      <article class="svc-capability svc-capability-fde" id="svc-fde"><div class="svc-cap-top"><span>03</span><span>INTEGRATION</span></div><h3>FDE<br>与 AI 落地</h3><p>与实际使用系统的人一起工作，理解业务、连接数据，把原型推进到可用版本。</p><ul><li>业务流程与系统对接</li><li>开发、部署与使用反馈</li><li>评估、维护与持续迭代</li></ul><a class="svc-link" href="/contact/?topic=business">讨论落地场景 <span aria-hidden="true">↗</span></a></article>
+    </div>
+    <p class="svc-scope-note">FDE 指 Forward Deployed Engineer。这里关注深入业务现场、与使用者共同推进开发和交付的工作方式。</p>
+  </div>
+</section>
+
+<section class="svc-process wrap" aria-labelledby="svc-process-title" data-svc-process>
+  <div class="svc-section-heading"><p class="svc-kicker"><span>02</span><span>FROM IDEA TO USE</span></p><div class="svc-process-heading"><h2 id="svc-process-title">每一步，<br>都有可以确认的结果。</h2><p>先看见一个具体的版本，<br>再一起决定下一步。</p></div></div>
+  <div class="svc-process-tabs" aria-label="交付步骤">
+    <button type="button" id="svc-tab-0" data-svc-step="0" aria-controls="svc-panel-0"><span>01</span>对齐问题</button>
+    <button type="button" id="svc-tab-1" data-svc-step="1" aria-controls="svc-panel-1"><span>02</span>确认方案</button>
+    <button type="button" id="svc-tab-2" data-svc-step="2" aria-controls="svc-panel-2"><span>03</span>开发验证</button>
+    <button type="button" id="svc-tab-3" data-svc-step="3" aria-controls="svc-panel-3"><span>04</span>部署迭代</button>
+  </div>
+  <div class="svc-process-panels">
+    <article class="svc-process-panel" id="svc-panel-0" aria-labelledby="svc-tab-0"><div class="svc-process-visual svc-visual-brief" aria-hidden="true"><div class="svc-document"><span>PROJECT BRIEF</span><strong>从哪里开始？</strong><i></i><i></i><i></i><small>使用者 · 问题 · 目标</small></div><span class="svc-process-stamp">01 / DEFINE</span></div><div class="svc-process-copy"><span class="svc-panel-number">01 / 对齐问题</span><h3>先把问题说清楚。</h3><p>谁来使用？现在怎样完成这件事？最希望减少哪一步麻烦？一起确定首个版本的重点，区分必要功能与后续想法。</p><div class="svc-deliverable"><span>这一阶段确认</span><strong>目标场景 · 功能范围 · 验收要点</strong></div></div></article>
+    <article class="svc-process-panel" id="svc-panel-1" aria-labelledby="svc-tab-1"><div class="svc-process-visual svc-visual-design" aria-hidden="true"><div class="svc-prototype"><span>INTERACTION MAP</span><div><i></i><b>→</b><i></i><b>→</b><i></i></div><small>界面 · 流程 · 数据</small></div><span class="svc-process-stamp">02 / DESIGN</span></div><div class="svc-process-copy"><span class="svc-panel-number">02 / 确认方案</span><h3>让想法变得可见。</h3><p>用界面原型和关键流程确认使用方式，说明账号、数据、平台资质与第三方服务等依赖，再确定交付内容。</p><div class="svc-deliverable"><span>这一阶段确认</span><strong>交互原型 · 实现范围 · 依赖条件</strong></div></div></article>
+    <article class="svc-process-panel" id="svc-panel-2" aria-labelledby="svc-tab-2"><div class="svc-process-visual svc-visual-build" aria-hidden="true"><div class="svc-checksheet"><span>BUILD / REVIEW</span><div><i>01</i>关键流程</div><div><i>02</i>真实设备</div><div><i>03</i>失败场景</div></div><span class="svc-process-stamp">03 / BUILD</span></div><div class="svc-process-copy"><span class="svc-panel-number">03 / 开发验证</span><h3>在可用的版本里检查。</h3><p>逐步实现并提供阶段版本，结合实际设备、代表性数据和失败场景检查。AI 流程同时关注结果质量、重试和人工接管。</p><div class="svc-deliverable"><span>这一阶段确认</span><strong>可运行版本 · 测试结果 · 修正清单</strong></div></div></article>
+    <article class="svc-process-panel" id="svc-panel-3" aria-labelledby="svc-tab-3"><div class="svc-process-visual svc-visual-release" aria-hidden="true"><div class="svc-release-mark"><span>RELEASE PACKAGE</span><strong>↗</strong><div><i>代码</i><i>部署</i><i>说明</i></div></div><span class="svc-process-stamp">04 / DELIVER</span></div><div class="svc-process-copy"><span class="svc-panel-number">04 / 部署迭代</span><h3>让软件进入实际使用。</h3><p>交付约定的代码与使用说明，核对上线状态与维护方式。根据使用反馈安排后续修正，让产品继续向前。</p><div class="svc-deliverable"><span>这一阶段确认</span><strong>交付材料 · 上线状态 · 维护安排</strong></div></div></article>
+  </div>
+  <p class="svc-diagram-note">图形为交付过程示意，具体交付内容以双方确认的项目范围为准。</p>
+</section>
+
+<section class="svc-contact wrap" aria-labelledby="svc-contact-title"><div><p class="svc-kicker"><span>LET’S BUILD</span><span>EPIYA / HANGZHOU</span></p><h2 id="svc-contact-title">带着一个具体问题，<br>就可以开始聊。</h2><p>可以先告诉我们：谁会使用、目前怎样做、最想解决什么，以及已有的系统与资料。</p><div class="svc-contact-actions"><a class="svc-contact-button" href="/contact/?topic=business">联系 EPIYA <span aria-hidden="true">↗</span></a><a class="svc-link" href="/products.html">看看自有产品 <span aria-hidden="true">↗</span></a></div></div><div class="svc-contact-note"><span>BEFORE WE START</span><p>合作范围、费用、交付时间与维护方式，结合实际项目讨论。</p><p>平台账号、分发资质与第三方服务费用会在确定范围时一起核对。</p></div></section>
+'''

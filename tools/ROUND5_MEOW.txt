@@ -1,0 +1,39 @@
+ROUND 5 — MEOW INTERACTIVE PREVIEW
+
+Local preview extension only. No production, GitHub push, App, account or payment change.
+Rollback point for this increment: c71199a (Round 4 preview).
+
+Twelve themes are extracted from KeyboardTheme.swift, local 2.6.1 (61).
+The current China App Store metadata was checked on 2026-11-04: version 2.6.
+Six current-store themes: cream, strawberry, midnight, paw, sky, candy.
+Six clearly marked development themes: calico, orangeTabby, goldenShaded,
+ragdoll, maineCoon, devonRex.
+
+The interactive phone uses a browser implementation, labelled as a web demo.
+It supports arbitrary text, natural Meow conversion, clear/copy, sample text,
+theme changes preserving input, and a mobile theme selector. It does not implement
+the full iOS Chinese input engine or change App membership terms.
+Input is handled in browser memory only, with no storage, upload or analytics.
+
+Meow conversion is ported from Meowizer.swift; 4,386 synthetic text/mode cases
+match actual Swift output. Unicode versions may differ in future; no universal
+all-Unicode equivalence claim. Uses Intl.Segmenter and BigInt.
+The UI uses the natural mode, a 120 UTF-16-unit input cap matching maxlength,
+and composition events to avoid transforming/using an unfinished IME candidate.
+
+Nine original cat illustrations are coordinate-based SVG ports of KeyboardCatArt.
+Differences: browser antialiasing; systemPink fixed to the standard light value.
+No game, third-party brand art or generated fake product screenshots were added.
+
+Eight individual true screenshots: three official 2.6 images and five build61
+simulator captures using synthetic input. Build61 images are cropped with CSS to
+remove simulator chrome; the full unmodified original opens in the lightbox.
+The other four skins remain fully usable in the interactive preview, and their
+individual screenshot button is disabled with an explanation.
+
+Validation: 34 controller VM regressions, 10 engine test groups, 20-page static
+reference check, actual browser typing/copy/clear/theme/photo/lightbox checks,
+and home/detail/legacy layouts at 320,390,768,1440 pixels with 120-unit input.
+No real handset or network-throttling performance claim.
+
+The Round 4 noindex preview and approval-before-deploy instructions still apply.

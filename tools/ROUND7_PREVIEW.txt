@@ -1,0 +1,16 @@
+EPIYA Round 7 — subtle scroll response, 2026-11-05
+Local-only preview; no production operations. Preserve Round 6 source bed166ef42176df7e38708d5371e83177895855c as the rollback point.
+
+Added assets/scroll-motion.js and scroll-motion.css, loaded by tools/build.py. All 20 rendered page body HTML blocks are byte-identical to Round 6. No copy, layout, product functionality, real distribution status, backend or account changes.
+
+Behavior
+- Below-fold content fragments enter once, from opacity .78 and 14px translation to their unchanged final state (desktop 720ms); compact/coarse contexts use 7px and 440ms.
+- The first viewport is immediately complete. No CSS-hidden content, no repeating entry/exit on reverse scroll. Animations stay observed until completion/cancellation and stop when leaving the viewport or receiving keyboard focus.
+- Desktop decorative background layers move at most 6–9px. Independent scroll variables preserve existing pointer-light transforms. Silver stage sheen shifts subtly. Product screenshot foregrounds, Meow input, QR codes and founder biography remain stable.
+- No scroll interception, persistent RAF, network, storage or new dependencies. One passive scroll listener only while a capable visible scene exists; batched reads then writes.
+- Reduced motion, saveData, low CPU/memory: static. Compact or coarse pointer: gentle entry only. Hidden tabs cancel work, BFCache restores safely. Reading-only legal/help/account/error pages do not initialize this module.
+
+Verification
+14 isolated lifecycle/performance behavior tests passed against the exact script SHA; test and TAP/JSON in the local round7 work directory. Static reference/privacy scan: 20 pages, 996 references, no errors/warnings. Forty browser layouts at 320/390/768/1440 have no horizontal overflow or visible broken images. Browser confirmed desktop decorative offset changes with native scroll (0.97px to 5.72px at different scroll positions), QR unchanged, mobile gentle mode with no chip movement, and Meow input unchanged/functional. No browser console errors observed. No physical device or performance score claim.
+
+Preview remains noindex, loopback port 8767. Deploy only after approval. Prior production packaging safeguards stay in place; future production builds must also verify package DATE against the intended release date.

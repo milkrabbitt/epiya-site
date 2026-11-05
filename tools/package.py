@@ -10,6 +10,7 @@ compare the resulting archive SHA256 with the locally verified expected hash.
 import argparse
 import binascii
 import hashlib
+from html.parser import HTMLParser
 import json
 import os
 from pathlib import Path
@@ -17,13 +18,13 @@ import re
 import struct
 import tempfile
 
-DATE = '2026-11-04'
+DATE = '2026-11-05'
 ROOT_FILES = {
     '.nojekyll', '404.html', 'CNAME', 'about.html', 'changelog.html', 'index.html',
     'legacy.css', 'privacy.html', 'products.html', 'releases.json', 'robots.txt',
     'sitemap.xml', 'style.css', 'terms.html', 'services.html',
 }
-PUBLIC_DIRECTORIES = {'assets', 'meow', 'products', 'downloads', 'relic', 'account', 'contact', 'support'}
+PUBLIC_DIRECTORIES = {'assets', 'meow', 'products', 'downloads', 'relic', 'account', 'contact', 'support', 'investment'}
 STATIC_SUFFIXES = {
     '.html', '.css', '.js', '.mjs', '.json', '.svg', '.png', '.webp', '.jpg',
     '.jpeg', '.gif', '.ico', '.avif', '.webm', '.mp4', '.woff', '.woff2',
@@ -38,6 +39,35 @@ SECRET_PATTERNS = [
     re.compile(rb'''(?:api[_-]?key|client[_-]?secret|merchant[_-]?secret|access[_-]?token|private[_-]?key)\s*["']?\s*[:=]\s*["']([A-Za-z0-9_+/.=-]{20,})["']''', re.I),
     re.compile(rb'/Users/apple/'),
 ]
+
+
+class ProductionRobotsParser(HTMLParser):
+    """Inspect real metadata, without mistaking documentation for directives."""
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != 'meta':
+            return
+        attributes = {key.lower(): (value or '') for key, value in attrs}
+        name = attributes.get('name', '').strip().lower()
+        if name not in ('robots', 'googlebot', 'bingbot'):
+            return
+        directives = re.split(r'[\s,;]+', attributes.get('content', '').lower())
+        if set(directives) & {'noindex', 'none'}:
+            raise ValueError('Production archive cannot contain noindex/none robots metadata')
+
+
+def require_production_content(name, data):
+    if Path(name).suffix.lower() == '.html':
+        parser = ProductionRobotsParser()
+        try:
+            parser.feed(data.decode('utf-8-sig'))
+            parser.close()
+        except ValueError as error:
+            raise ValueError(str(error) + ': ' + name)
+    elif name == 'robots.txt':
+        for line in data.decode('utf-8-sig').splitlines():
+            directive = line.partition('#')[0].strip()
+            if re.fullmatch(r'disallow\s*:\s*/\s*', directive, re.I):
+                raise ValueError('Production archive cannot contain robots.txt Disallow: /')
 
 
 def selected_files(source):
@@ -169,6 +199,7 @@ def package(source, commit, output):
     # the same byte snapshot even if another process edits the checkout later.
     for name, path in sorted(files.items()):
         data = path.read_bytes()
+        require_production_content(name, data)
         total += len(data)
         if total > MAX_BYTES:
             raise ValueError('Public release exceeds 150 MiB')

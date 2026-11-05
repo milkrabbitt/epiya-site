@@ -1,0 +1,341 @@
+/* Interactive web demonstration. The source screenshots keep their own view. */
+[data-meow-lab] {
+  --skin-bg:#faeaf0;
+  --skin-key:#fffafa;
+  --skin-special:#f2d5e2;
+  --skin-ink:#3f3342;
+  --skin-muted:#766573;
+  --skin-accent:#a64d79;
+  --skin-preview:#fff9fc;
+  --skin-outline:#d8bdcb;
+  --skin-glow:#e8b7d0;
+}
+[data-meow-lab] [hidden] { display:none!important; }
+[data-meow-lab] .meow-theme-picker { margin-top:29px; max-width:490px; }
+[data-meow-lab] .theme-family + .theme-family { margin-top:15px; }
+[data-meow-lab] .theme-family-label {
+  display:flex; align-items:center; gap:12px; margin:0 0 9px;
+  color:#75667b; font-size:11px; line-height:1.65; letter-spacing:.03em;
+}
+[data-meow-lab] .theme-family-label:after {
+  content:""; height:1px; flex:1; background:#9d8ba32e;
+}
+[data-meow-lab] .theme-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+[data-meow-lab] .theme-options button {
+  position:relative; min-width:0; min-height:48px; width:100%; display:flex;
+  flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:3px 7px;
+  padding:9px 10px; border:1px solid #b6a9be; border-radius:7px;
+  background:#faf7fb80; color:#594960; font:inherit; font-size:12px;
+  line-height:1.45; cursor:pointer; text-align:left; box-shadow:none;
+  transition:background .24s,border-color .24s,color .24s,box-shadow .24s;
+}
+[data-meow-lab] .theme-options button i {
+  width:12px; height:12px; flex:0 0 12px; display:block; border-radius:50%;
+  border:1px solid #493c5840; box-shadow:inset 0 0 0 1px #ffffff50;
+}
+[data-meow-lab] .theme-options button small {
+  font-size:9px; color:inherit; opacity:.75; white-space:nowrap;
+  line-height:1.35; margin-left:19px; flex-basis:calc(100% - 19px);
+}
+[data-meow-lab] .theme-options button[aria-pressed="true"] {
+  background:#51445e; color:#fff9fd; border-color:#51445e;
+  box-shadow:0 4px 12px #51445e19;
+}
+[data-meow-lab] .theme-options button[aria-pressed="true"] i { border-color:#fff7; }
+[data-meow-lab] .theme-options button:active { box-shadow:inset 0 2px 5px #1d10201a; }
+[data-meow-lab] .theme-options button:disabled { cursor:default; opacity:.65; }
+[data-meow-lab] .meow-lab {
+  position:relative; width:min(100%,344px); max-width:100%; min-width:0;
+  margin:0 auto; z-index:3; color:#51425d; text-align:left;
+}
+[data-meow-lab] .lab-toolbar {
+  display:flex; gap:4px; width:100%; margin:0 auto 15px; padding:4px;
+  border:1px solid #b7abbe; border-radius:9px;
+  background:#f5f1f7d9; box-shadow:inset 0 1px 0 #ffffffb0;
+}
+[data-meow-lab] .lab-toolbar button {
+  flex:1; min-width:0; min-height:44px; padding:8px 10px; border:0;
+  border-radius:6px; background:transparent; color:#73647d;
+  font:inherit; font-size:12px; cursor:pointer; transition:background .25s,color .25s;
+}
+[data-meow-lab] .lab-toolbar button[aria-pressed="true"],
+[data-meow-lab] .lab-toolbar button[aria-selected="true"] {
+  background:#fffafd; color:#46374f; box-shadow:0 2px 7px #51405e16;
+}
+[data-meow-lab] .lab-toolbar button:disabled { opacity:.5; cursor:default; }
+[data-meow-lab] .lab-phone {
+  position:relative; width:100%; padding:6px; border-radius:39px;
+  background:linear-gradient(118deg,#f3edf5,#a6a5bc 19%,#eeeaf2 39%,#9e9eb4 70%,#dfd9e8);
+  border:1px solid #f8f2ff; box-shadow:0 25px 38px -13px #59446645,0 0 0 1px #78668515;
+}
+[data-meow-lab] .lab-screen {
+  position:relative; min-width:0; overflow:hidden; padding:16px 15px 11px;
+  border-radius:32px; color:var(--skin-ink); background:var(--skin-bg);
+  border:1px solid #ffffff66; line-height:1.65; color-scheme:light;
+  transition:background .32s,color .28s;
+}
+[data-meow-lab] .lab-island {
+  width:83px; height:20px; border-radius:20px; margin:0 auto 17px;
+  background:#25232b; box-shadow:inset 0 1px 2px #0007;
+}
+[data-meow-lab] .lab-brand { margin:0 0 20px; text-align:center; }
+[data-meow-lab] .lab-brand .lab-cat {
+  display:block; font-size:22px; line-height:1.4; font-weight:650;
+  color:var(--skin-accent); letter-spacing:-.045em;
+}
+[data-meow-lab] .lab-brand h3 {
+  color:var(--skin-ink); font-size:17px; line-height:1.5; letter-spacing:.015em;
+  margin:7px 0 2px; font-weight:600;
+}
+[data-meow-lab] .lab-brand small {
+  display:block; font-size:10px; color:var(--skin-muted); line-height:1.6;
+}
+[data-meow-lab] .lab-input-panel,
+[data-meow-lab] .lab-result-panel {
+  position:relative; padding:12px 12px 7px; border-radius:13px;
+  border:1px solid var(--skin-outline); background:var(--skin-preview);
+  min-width:0; transition:background .32s,border-color .32s;
+}
+[data-meow-lab] .lab-input-panel > label {
+  display:block; font-size:11px; color:var(--skin-muted); margin:0 0 7px;
+}
+[data-meow-lab] textarea[data-lab-input] {
+  display:block; width:100%; min-width:0; min-height:86px; max-height:200px;
+  padding:2px 0; border:0; border-radius:2px; background:transparent;
+  color:var(--skin-ink); font:inherit; font-size:16px; line-height:1.7;
+  resize:vertical; overflow:auto; caret-color:var(--skin-accent);
+  letter-spacing:0; appearance:none;
+}
+[data-meow-lab] textarea[data-lab-input]::placeholder { color:var(--skin-muted); opacity:1; }
+[data-meow-lab] .lab-input-meta {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-top:2px; color:var(--skin-muted); font-size:10px; line-height:1.5;
+}
+[data-meow-lab] .lab-input-meta button,
+[data-meow-lab] .lab-result-heading button {
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px;
+  min-width:44px; margin:0 -4px 0 0; padding:5px 6px; border:0;
+  border-radius:5px; background:transparent; color:var(--skin-ink);
+  font:inherit; font-size:11px; cursor:pointer;
+}
+[data-meow-lab] .lab-input-meta button:disabled,
+[data-meow-lab] .lab-result-heading button:disabled { opacity:.5; cursor:default; }
+[data-meow-lab] .lab-result-panel { margin-top:10px; padding-top:5px; padding-bottom:14px; }
+[data-meow-lab] .lab-result-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:7px;
+  color:var(--skin-muted); font-size:11px; min-height:44px;
+}
+[data-meow-lab] .lab-result-heading label { margin:0; }
+[data-meow-lab] .lab-output {
+  min-height:65px; margin:3px 0 0; color:var(--skin-ink);
+  font-size:15px; line-height:1.75; white-space:pre-wrap;
+  overflow-wrap:anywhere; word-break:normal; font-weight:450;
+}
+[data-meow-lab] .lab-output:empty:before {
+  content:"输入一句话，看看它的猫咪语气。"; color:var(--skin-muted);
+}
+[data-meow-lab] .lab-samples { display:flex; gap:6px; margin:11px 0 14px; }
+[data-meow-lab] .lab-samples button {
+  flex:1; min-width:0; min-height:44px; padding:7px 8px; border-radius:7px;
+  border:1px solid var(--skin-outline); background:var(--skin-special);
+  color:var(--skin-ink); font:inherit; font-size:11px; line-height:1.45;
+  cursor:pointer; overflow-wrap:anywhere; transition:background .25s;
+}
+[data-meow-lab] .lab-keyboard {
+  margin:0 -10px; padding:10px 4px 2px; user-select:none;
+  border-top:1px solid var(--skin-outline); color:var(--skin-ink);
+}
+[data-meow-lab] .lab-key-row { display:flex; gap:4px; margin:0 0 5px; }
+[data-meow-lab] .lab-key-row:nth-child(2) { padding:0 12px; }
+[data-meow-lab] .lab-key-row:nth-child(3) { padding:0 5px; }
+[data-meow-lab] .lab-key-row > span {
+  min-width:0; min-height:29px; flex:1; display:flex; align-items:center;
+  justify-content:center; padding:3px 0; border-radius:5px;
+  background:var(--skin-key); border-bottom:1px solid var(--skin-outline);
+  color:var(--skin-ink); font-size:12px; line-height:1.4;
+  box-shadow:0 1px 1px #261b3210;
+  transition:background .3s,color .3s;
+}
+[data-meow-lab] .lab-key-row.bottom > span { font-size:10px; min-height:31px; }
+[data-meow-lab] .lab-key-row.bottom > .space { flex:4; }
+[data-meow-lab] .lab-key-row > .special,
+[data-meow-lab] .lab-key-row > .emoji { background:var(--skin-special); }
+[data-meow-lab] .lab-home-indicator {
+  width:88px; height:4px; margin:13px auto 1px; border-radius:5px;
+  background:var(--skin-ink); opacity:.6;
+}
+[data-meow-lab] .lab-caption,
+[data-meow-lab] .lab-privacy {
+  color:#6e6079; text-align:center; font-size:11px; line-height:1.75;
+  margin:12px 0 0; overflow-wrap:anywhere;
+}
+[data-meow-lab] .lab-privacy { margin-top:5px; font-size:10px; }
+[data-meow-lab] .lab-photo { width:100%; min-width:0; }
+[data-meow-lab] .lab-photo figure { margin:0; width:100%; max-width:100%; }
+[data-meow-lab] .lab-photo .image-link {
+  display:block; width:100%; padding:6px; border:1px solid #f8f2ff; border-radius:39px;
+  background:linear-gradient(118deg,#f3edf5,#a6a5bc 19%,#eeeaf2 39%,#9e9eb4 70%,#dfd9e8);
+  box-shadow:0 25px 38px -13px #59446645; transform:none!important;
+}
+[data-meow-lab] .lab-photo img {
+  display:block; width:100%; max-width:100%; height:auto; object-fit:contain;
+  border-radius:32px; transform:none!important;
+}
+[data-meow-lab] .lab-photo figcaption {
+  margin:13px 0 0; color:#6e6079; text-align:center; font-size:11px; line-height:1.75;
+}
+[data-meow-lab] .lab-photo figcaption span { display:inline; color:inherit; font-size:inherit; }
+[data-meow-lab] .meow-live-stage { min-width:0; width:100%; padding:15px 0 12px; }
+[data-meow-lab].meow-showcase { align-items:center; gap:55px; }
+[data-meow-lab].meow-showcase .showcase-copy { min-width:0; }
+.home-gallery [data-meow-lab].meow-section {
+  background:linear-gradient(128deg,#f6eeef,#eae5ee 55%,#d8dfed);
+  background:linear-gradient(128deg,#f7f1f2,color-mix(in srgb,var(--skin-glow) 17%,#eeeaf2) 55%,#dce3ee);
+}
+.home-gallery [data-meow-lab] .meow-layout { grid-template-columns:1.08fr 1fr; gap:65px; }
+.home-gallery [data-meow-lab] .meow-installation {
+  min-height:840px; height:auto; padding:35px 26px 67px; align-items:center;
+}
+.home-gallery .meow-section[data-meow-lab] .meow-backplate {
+  top:5%; height:83%; filter:none;
+  background:linear-gradient(150deg,#e0e8f0,#f9f3f6 29%,#e3cada 58%,#b7bfd7);
+  background:linear-gradient(150deg,#dce7f0,#faf5f8 29%,color-mix(in srgb,var(--skin-glow) 55%,#ede2ed) 58%,#abb9d3);
+}
+.home-gallery [data-meow-lab] .meow-backplate > i {
+  border-left-color:#b9dfeb; border-right-color:var(--skin-glow);
+  box-shadow:inset 4px 0 17px #8bc4dc20,inset -7px 0 20px #cdacd02b;
+}
+.home-gallery [data-meow-lab] .meow-backplate > span { top:38px; opacity:.5; }
+.home-gallery [data-meow-lab] .meow-plinth { bottom:47px; height:120px; }
+.home-gallery [data-meow-lab] .material-label { bottom:6px; }
+.home-gallery [data-meow-lab] .keyboard-workbench {
+  background:linear-gradient(115deg,#f8f5f8dc,#e0e2efc9);
+  background:linear-gradient(115deg,#f8f5f8e8,color-mix(in srgb,var(--skin-glow) 18%,#e5e6ef));
+}
+.home-gallery [data-meow-lab] .keyboard-surface {
+  background:linear-gradient(145deg,#fef7fc,#b9b8cb 22%,#f9eff8 51%,#c2b6d0);
+  background:linear-gradient(145deg,#fff8fc,#b7bbd0 22%,#f7f0fa 51%,color-mix(in srgb,var(--skin-glow) 38%,#c4bdd2));
+}
+[data-meow-lab] :focus-visible { outline:2px solid #694d82; outline-offset:3px; }
+[data-meow-lab] .lab-screen :focus-visible {
+  outline:2px solid var(--skin-accent); outline-offset:3px;
+}
+@media (hover:hover) and (pointer:fine) {
+  [data-meow-lab] .theme-options button:hover { border-color:#806c90; }
+  [data-meow-lab] .theme-options button:not([aria-pressed="true"]):hover { background:#fffaffcf; }
+  [data-meow-lab] .lab-toolbar button:not(:disabled):hover { background:#fffafd; color:#47384f; }
+  [data-meow-lab] .lab-input-meta button:hover,
+  [data-meow-lab] .lab-result-heading button:hover { text-decoration:underline; text-underline-offset:3px; }
+}
+@media (max-width:1100px) {
+  .home-gallery [data-meow-lab] .meow-layout { gap:30px; }
+  .home-gallery [data-meow-lab] .meow-installation { padding-inline:18px; }
+  [data-meow-lab].meow-showcase { gap:35px; padding:40px; }
+  [data-meow-lab] .theme-options button { padding:8px; font-size:11px; gap:3px 6px; }
+  [data-meow-lab] .theme-options button i { width:10px; height:10px; flex-basis:10px; }
+  [data-meow-lab] .theme-options button small { margin-left:16px; flex-basis:calc(100% - 16px); }
+}
+@media (min-width:601px) and (max-width:820px) {
+  .home-gallery [data-meow-lab] .meow-layout { grid-template-columns:1fr; gap:25px; }
+  .home-gallery [data-meow-lab] .meow-copy { max-width:620px; width:100%; margin:auto; }
+  .home-gallery [data-meow-lab] .meow-installation { width:min(100%,500px); margin:0 auto; }
+  [data-meow-lab].meow-showcase { grid-template-columns:1fr; }
+  [data-meow-lab] .meow-theme-picker { max-width:100%; }
+  [data-meow-lab] .theme-options button { font-size:12px; }
+  [data-meow-lab] .theme-options button small { margin-left:0; flex-basis:auto; }
+}
+@media (max-width:600px) {
+  [data-meow-lab] .meow-theme-picker { margin-top:25px; width:100%; max-width:none; }
+  [data-meow-lab] .theme-options { gap:6px; }
+  [data-meow-lab] .theme-options button { min-height:49px; padding:7px 8px; }
+  [data-meow-lab] .theme-family-label { font-size:11px; margin-bottom:8px; }
+  [data-meow-lab] .theme-family + .theme-family { margin-top:13px; }
+  [data-meow-lab] .theme-options button i { width:10px; height:10px; flex-basis:10px; }
+  [data-meow-lab] .theme-options button small { font-size:8px; }
+  [data-meow-lab] .meow-lab { width:min(100%,330px); }
+  [data-meow-lab] .lab-toolbar { margin-bottom:13px; }
+  [data-meow-lab] .lab-toolbar button { font-size:12px; }
+  [data-meow-lab] .lab-phone { border-radius:35px; padding:5px; }
+  [data-meow-lab] .lab-screen { padding:14px 12px 10px; border-radius:29px; }
+  [data-meow-lab] .lab-brand { margin-bottom:17px; }
+  [data-meow-lab] .lab-brand .lab-cat { font-size:21px; }
+  [data-meow-lab] .lab-brand h3 { font-size:17px; }
+  [data-meow-lab] .lab-input-panel,[data-meow-lab] .lab-result-panel { padding-inline:10px; }
+  [data-meow-lab] .lab-output { font-size:14px; line-height:1.8; }
+  [data-meow-lab] .lab-samples { gap:5px; }
+  [data-meow-lab] .lab-samples button { font-size:10px; padding:6px; }
+  [data-meow-lab] .lab-keyboard { margin-inline:-7px; }
+  [data-meow-lab] .lab-key-row { gap:3px; }
+  [data-meow-lab] .lab-key-row > span { font-size:11px; }
+  [data-meow-lab] .lab-photo .image-link { padding:5px; border-radius:35px; }
+  [data-meow-lab] .lab-photo img { border-radius:29px; }
+  [data-meow-lab] .lab-caption { font-size:10px; }
+  [data-meow-lab] .lab-privacy { font-size:10px; }
+  .home-gallery [data-meow-lab] .meow-layout { gap:0; }
+  .home-gallery [data-meow-lab] .meow-installation {
+    width:100%; max-width:420px; min-height:0; margin-top:30px;
+    padding:27px 10px 62px; align-self:center;
+  }
+  .home-gallery .meow-section[data-meow-lab] .meow-backplate { top:6%; height:82%; }
+  .home-gallery [data-meow-lab] .meow-plinth { bottom:40px; height:104px; }
+  [data-meow-lab].meow-showcase { padding:26px 18px; gap:25px; }
+  [data-meow-lab] .meow-live-stage { padding:0; }
+}
+@media (max-width:360px) {
+  [data-meow-lab] .theme-options button { font-size:10px; padding:7px 6px; gap:3px 5px; }
+  [data-meow-lab] .theme-options button i { width:8px; height:8px; flex-basis:8px; }
+  [data-meow-lab] .theme-options button small { margin-left:13px; flex-basis:calc(100% - 13px); }
+  .home-gallery [data-meow-lab] .meow-installation { padding-inline:0; }
+  [data-meow-lab].meow-showcase { padding-inline:13px; }
+  [data-meow-lab] .lab-screen { padding-inline:10px; }
+  [data-meow-lab] .lab-key-row > span { font-size:10px; }
+  [data-meow-lab] .lab-key-row { gap:3px; }
+  [data-meow-lab] .lab-key-row:nth-child(2) { padding-inline:8px; }
+}
+@media (prefers-reduced-motion:reduce),(pointer:coarse) {
+  [data-meow-lab] *,[data-meow-lab] *:before,[data-meow-lab] *:after {
+    transition:none!important; animation:none!important;
+  }
+}
+/* Source-derived cat illustrations and explicitly labelled keyboard palette demo. */
+[data-meow-lab] .lab-key-row .space{position:relative;gap:8px}
+[data-meow-lab] .lab-key-row img{width:38px;height:auto;max-width:38px;object-fit:contain}
+[data-meow-lab] .lab-keyboard{pointer-events:none}
+[data-meow-lab] .lab-key-preview{display:flex;align-items:center;gap:14px;margin:12px 0 20px;min-height:45px}
+[data-meow-lab] .lab-key-preview img{width:58px;height:auto;flex:0 0 58px}
+[data-meow-lab] .lab-key-preview span{font-size:16px;line-height:1.7;overflow-wrap:anywhere;white-space:pre-wrap;min-width:0}
+[data-meow-lab] .lab-faces{display:flex;gap:10px}
+[data-meow-lab] .lab-faces span{flex:1;text-align:center;background:var(--skin-key);padding:12px 4px;border-radius:8px;font-size:17px;white-space:nowrap}
+.home-gallery [data-meow-lab] .keyboard-surface{border-radius:13px;background:var(--skin-bg);padding:22px 20px;color:var(--skin-ink);box-shadow:0 15px 35px #65566e1f;border:1px solid var(--skin-outline);transition:background .3s}
+.home-gallery [data-meow-lab] .keyboard-surface .lab-keyboard{margin:0;padding:0;border:0}
+.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row{gap:7px;margin-bottom:8px}
+.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row>span{font-size:23px;min-height:56px;border-radius:8px}
+.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row.bottom>span{font-size:16px;min-height:54px}
+.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row img{width:55px;max-width:55px}
+[data-meow-lab] .lab-photo-note{font-size:11px;line-height:1.7;color:#6e6079;text-align:center;margin:0 0 12px}
+[data-meow-lab] .lab-photo figure{aspect-ratio:660/1550;display:flex;flex-direction:column;justify-content:center}
+[data-meow-lab] .lab-photo-window{position:relative;display:block;overflow:hidden;width:100%;aspect-ratio:660/1434;border-radius:32px;background:var(--skin-bg)}
+[data-meow-lab] .lab-photo-window.simulator-crop{aspect-ratio:798/1738}
+[data-meow-lab] .lab-photo-window.simulator-crop img{position:absolute;width:113.533835%;max-width:none;height:auto;left:-6.766917%;top:-9.090909%;border-radius:0}
+[data-meow-lab] .lab-photo-retry{min-height:44px;padding:10px 15px;margin:18px auto;border:1px solid #ac9db5;border-radius:7px;background:#f8f4fa;color:#51425d;font:inherit;font-size:13px;cursor:pointer}
+[data-meow-lab][data-skin-dark=true] .lab-screen{color-scheme:dark}
+[data-meow-lab] .lab-output[data-empty=true]{color:var(--skin-muted);font-size:13px}
+[data-meow-lab] [aria-busy=true].lab-output{opacity:.65}
+@media(max-width:600px){.home-gallery [data-meow-lab] .keyboard-surface{padding:15px 11px}.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row{gap:4px;margin-bottom:5px}.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row>span{font-size:17px;min-height:40px}.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row.bottom>span{font-size:12px;min-height:40px}.home-gallery [data-meow-lab] .keyboard-surface .lab-key-row img{width:40px;max-width:40px}[data-meow-lab] .lab-faces{gap:5px}[data-meow-lab] .lab-faces span{font-size:12px;padding:8px 2px}[data-meow-lab] .lab-key-preview span{font-size:13px}[data-meow-lab] .lab-key-preview img{width:43px;flex-basis:43px}[data-meow-lab] .lab-key-preview{gap:8px;margin:8px 0 13px}}
+@media(prefers-reduced-motion:reduce),(pointer:coarse){.home-gallery [data-meow-lab] .keyboard-surface{transition:none}}
+[data-meow-lab] .lab-mobile-theme{display:none}
+@media(max-width:600px){
+ [data-meow-lab] .lab-mobile-theme{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;line-height:1.5;color:#66546e;margin:0 0 13px}
+ [data-meow-lab] .lab-mobile-theme select{min-height:44px;max-width:73%;border:1px solid #b7abbe;border-radius:7px;padding:8px 25px 8px 10px;font:inherit;font-size:14px;color:#493a55;background:#faf7fc}
+ .home-gallery [data-meow-lab] .meow-copy{display:contents}
+ .home-gallery [data-meow-lab] .meow-copy>.product-name{order:0;width:100%}
+ .home-gallery [data-meow-lab] .meow-copy>h2{order:1;width:100%}
+ .home-gallery [data-meow-lab] .meow-copy>.meow-description{order:2;width:100%}
+ .home-gallery [data-meow-lab] .meow-copy>.meow-theme-picker{order:3}
+ .home-gallery [data-meow-lab] .meow-copy>.theme-hint{order:4;width:100%;margin-bottom:0}
+ .home-gallery [data-meow-lab] .meow-installation{order:5;margin-top:20px}
+ .home-gallery [data-meow-lab] .meow-actions{order:6;width:100%;margin-top:18px}
+ .home-gallery [data-meow-lab] .meow-features{order:7;width:100%}
+}
+[data-meow-lab] .lab-screen :focus-visible{outline-color:var(--skin-ink)}
+@media(max-width:600px){[data-meow-lab] .lab-mobile-theme select{font-size:16px}}
