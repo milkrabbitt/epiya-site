@@ -1,0 +1,23 @@
+EPIYA Round 6 — local visual preview, 2026-11-04
+
+User scope
+Preserve the approved homepage and Meow input/theme interaction. Extend the material/colour language to inner pages. Make distillation the clear Relic message. Replace only the three founder biography paragraphs with the user's exact supplied text; retain heading, attribution, card and layout. No production deployment until this revision is approved.
+
+Implementation
+- tools/build.py integrates product_scenes.py, services_scene.py and interior_scenes.py.
+- New assets/interiors.css, product-scenes.css/js and service-scene.css/js are scoped to inner pages.
+- Relic: authorized material -> character confirmation -> distillation/preview -> AI conversation. Step panels use synthetic illustrations, not live distillation.
+- Services: a silver workbench, actual owned product image plus labelled diagrams, and keyboard-accessible delivery steps.
+- Products, about, contact, downloads and investment have light material surfaces. Founder component HTML outside the two requested text substitutions is retained exactly; the third paragraph already matched the requested wording.
+- Homepage gallery, Meow engine, controller and styling, site.js, CNAME and release channel configuration are retained byte-for-byte except homepage/Relic editorial copy in their templates.
+- No live account, payment, product backend, mailbox or channel status modifications.
+
+Preview build
+EPIYA_PREVIEW=1 python3 tools/build.py
+The existing local preview builder runs this mode and copies allowed public assets to its sibling public/ directory. Server is loopback-only on port 8767. All preview HTML and HTTP responses remain noindex.
+
+Validation
+20 pages x 4 viewport widths (320/390/768/1440): no horizontal overflow, one H1, no broken visible images. Main 10 pages also checked for offscreen text. Static check: 956 references, 0 errors/warnings, protected backend links classified. Exact founder section and retained-asset checks pass. Real browser clicks/keyboard tested for both new step interfaces, original homepage tabs, mobile menu, lightbox/return focus, Meow input/themes and copy success feedback. Clipboard readback is not independently verified because the browser tool's virtual clipboard differs from the page clipboard. No physical phone, throttled network or performance score claimed.
+
+Future production safety
+Production packaging now includes investment/ and rejects noindex/none metadata or robots.txt Disallow: /. Build in production mode and review first; never package this preview directly. Five isolated package tests and twenty existing deploy tests passed. Use current live release.json as the old commit precondition. The original ECS, domain, backend routes and rollback procedure remain in use. No push or production operation was performed in this revision.
