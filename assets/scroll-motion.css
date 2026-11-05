@@ -1,0 +1,54 @@
+/* Small scroll responses, independent of the existing pointer-light system. */
+.ep-scroll-depth {
+  translate: 0 var(--ep-scroll-y, 0px);
+}
+.ep-scroll-surface {
+  --ep-scroll-y: 0px;
+  --ep-scroll-light: 0px;
+}
+.ep-scroll-sheen {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  contain: paint;
+}
+.ep-scroll-sheen::before {
+  content: "";
+  position: absolute;
+  inset: -20% -25%;
+  background: linear-gradient(112deg, transparent 30%, #d1e9ff08 38%, #fff2 47%, #e9d5ff0c 53%, transparent 63%);
+  translate: var(--ep-scroll-light, 0px) 0;
+  opacity: .5;
+}
+.ep-scroll-surface.ix-intro-stage::before {
+  translate: 0 var(--ep-scroll-y, 0px);
+}
+.ep-scroll-surface.ix-intro-stage::after {
+  translate: 0 calc(var(--ep-scroll-y, 0px) * -.45);
+}
+.ep-scroll-surface.svc-workbench::before {
+  translate: 0 var(--ep-scroll-y, 0px);
+}
+/* Keep reading and active input stable. JS also cancels in-flight entrances. */
+.ep-scroll-depth:focus-within { translate: none; }
+@media (pointer:coarse), (max-width:700px) {
+  .ep-scroll-depth,
+  .ep-scroll-surface.ix-intro-stage::before,
+  .ep-scroll-surface.ix-intro-stage::after,
+  .ep-scroll-surface.svc-workbench::before { translate: none; }
+  .ep-scroll-sheen { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ep-scroll-depth,
+  .ep-scroll-surface.ix-intro-stage::before,
+  .ep-scroll-surface.ix-intro-stage::after,
+  .ep-scroll-surface.svc-workbench::before { translate: none!important; }
+  .ep-scroll-sheen { display:none!important; }
+}
+@media print {
+  .ep-scroll-depth { translate:none!important; }
+  .ep-scroll-sheen { display:none!important; }
+}
